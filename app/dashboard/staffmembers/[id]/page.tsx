@@ -34,10 +34,12 @@ export default function StaffDetailsPage() {
 
         const apiUrl = process.env.BACKEND_URL;
         if (!apiUrl) {
-          throw new Error("API URL is undefined. Check environment variables.");
+          setError("API configuration error. Please contact support.");
+          console.error("BACKEND_URL is undefined. Check environment variables.");
+          setLoading(false);
+          return;
         }
 
-        // Fetch all staff and find the one with matching staffId
         const response = await fetch(`${apiUrl}/api/staff`, {
           method: "GET",
           headers: {
@@ -73,7 +75,7 @@ export default function StaffDetailsPage() {
   if (loading) {
     return (
       <div className="container mx-auto py-8 px-4">
-        <p className="text-gray-500">Loading staff details...</p>
+        <p className="text-gray-500">{error || "Loading staff details..."}</p>
       </div>
     );
   }

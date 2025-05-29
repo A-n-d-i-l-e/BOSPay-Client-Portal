@@ -52,7 +52,6 @@ export default function StaffManagementDashboard() {
 
   // Fetch staff members
   useEffect(() => {
-    
     const fetchStaff = async () => {
       setLoading(true);
       try {
@@ -63,9 +62,11 @@ export default function StaffManagementDashboard() {
 
         const apiUrl = process.env.BACKEND_URL;
         if (!apiUrl) {
-          throw new Error("API URL is undefined. Check environment variables.");
+          setError("API configuration error. Please contact support.");
+          console.error("BACKEND_URL is undefined. Check environment variables.");
+          setLoading(false);
+          return;
         }
-        console.log("API URL:", process.env.BACKEND_URL);
 
         const response = await fetch(`${apiUrl}/api/staff`, {
           method: "GET",
@@ -127,9 +128,11 @@ export default function StaffManagementDashboard() {
         throw new Error("Authentication failed: No token received");
       }
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const apiUrl = process.env.BACKEND_URL;
       if (!apiUrl) {
-        throw new Error("API URL is undefined. Check environment variables.");
+        setError("API configuration error. Please contact support.");
+        console.error("BACKEND_URL is undefined. Check environment variables.");
+        return;
       }
 
       const response = await fetch(`${apiUrl}/api/staff/invite`, {
@@ -182,7 +185,7 @@ export default function StaffManagementDashboard() {
     return (
       <div className="p-4">
         <h1 className="text-xl font-bold">Staff Management</h1>
-        <p className="text-gray-500">Loading staff data...</p>
+        <p className="text-gray-500">{error || "Loading staff data..."}</p>
       </div>
     );
   }
