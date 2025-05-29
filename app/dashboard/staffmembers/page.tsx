@@ -52,7 +52,7 @@ export default function StaffManagementDashboard() {
 
   // Fetch staff members
   useEffect(() => {
-    console.log("API URL:", process.env.NEXT_PUBLIC_API_URL);
+    console.log("API URL:", process.env.BACKEND_URL);
     const fetchStaff = async () => {
       setLoading(true);
       try {
