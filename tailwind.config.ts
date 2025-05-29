@@ -1,7 +1,8 @@
 import type { Config } from 'tailwindcss';
+import animate from 'tailwindcss-animate'; // Add this import
 
 const config: Config = {
-  darkMode: ['class'],
+  darkMode: 'class', // Fixed from ['class']
   content: [
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -51,7 +52,7 @@ const config: Config = {
         },
       },
       fontFamily: {
-        'poppins': ['Poppins', 'sans-serif'],
+        poppins: ['Poppins', 'sans-serif'],
         'dm-sans': ['DM Sans', 'sans-serif'],
       },
       borderRadius: {
@@ -75,7 +76,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [animate], // Use the imported animate plugin
 };
 
 export default config;

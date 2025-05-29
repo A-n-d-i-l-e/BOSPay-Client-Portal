@@ -33,29 +33,49 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { fetchUserOrganizationId } from "@/data/org";
 
 export default function EditProductPage() {
   const router = useRouter();
   const { id } = useParams();
   const { session } = useSession();
+  const [orgId, setOrgId] = useState<string | null>(null);
+
+  // Fetch organization ID when session is available
+  useEffect(() => {
+    const fetchOrgId = async () => {
+      if (session) {
+        try {
+          const token = await session.getToken();
+          const id = await fetchUserOrganizationId(token as string);
+          setOrgId(id);
+        } catch (error) {
+          console.error("Error fetching organization ID:", error);
+        }
+      }
+    };
+    fetchOrgId();
+  }, [session]);
 
   const { data: product, isLoading, error } = useQuery({
-    queryKey: ["product", id],
+    queryKey: ["product", id, orgId],
     queryFn: async () => {
       if (!session) throw new Error("No session found");
+      if (!orgId) throw new Error("Organization ID not found");
       const token = await session.getToken();
       if (!token) throw new Error("Token is null");
       return fetchProductById(id as string, token);
     },
-    enabled: !!id && !!session,
+    enabled: !!id && !!session && !!orgId,
   });
 
   const updateMutation = useMutation({
     mutationFn: async (updatedProduct: Partial<Product>) => {
       if (!session) throw new Error("No session found");
+      if (!orgId) throw new Error("Organization ID not found");
       const token = await session.getToken();
       if (!token) throw new Error("Token is null");
-      return updateProductById(id as string, updatedProduct, token);
+      return updateProductById(id as string, { ...updatedProduct, orgId }, token);
     },
     onSuccess: () => {
       setShowSuccessAlert(true);
@@ -70,6 +90,7 @@ export default function EditProductPage() {
   const deleteMutation = useMutation({
     mutationFn: async () => {
       if (!session) throw new Error("No session found");
+      if (!orgId) throw new Error("Organization ID not found");
       const token = await session.getToken();
       if (!token) throw new Error("Token is null");
       return deleteProductById(id as string, token);
@@ -277,7 +298,7 @@ export default function EditProductPage() {
           <Button
             variant="destructive"
             onClick={handleDelete}
-            disabled={deleteMutation.isPending}
+            disabled={deleteMutation.isPending || !orgId}
             className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
           >
             <Trash2 className="w-4 h-4 mr-2" />
@@ -285,7 +306,7 @@ export default function EditProductPage() {
           </Button>
           <Button
             onClick={handleSave}
-            disabled={updateMutation.isPending}
+            disabled={updateMutation.isPending || !orgId}
             className="bg-pacific-blue hover:bg-cobalt w-full sm:w-auto"
           >
             {updateMutation.isPending ? "Saving..." : "Save Changes"}
@@ -317,4 +338,3 @@ export default function EditProductPage() {
     </motion.div>
   );
 }
-

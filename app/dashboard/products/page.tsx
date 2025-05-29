@@ -1,9 +1,9 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchProducts, Product } from "@/data/products";
 import { useSession } from "@clerk/nextjs";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -26,33 +26,76 @@ import {
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
+import { fetchUserOrganizationId } from "@/data/org";
 
 const ProductsPage = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [stockFilter, setStockFilter] = useState("All");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [orgId, setOrgId] = useState<string | null>(null);
+  const [isOrgIdLoading, setIsOrgIdLoading] = useState(true);
 
   const { session } = useSession();
+  const queryClient = useQueryClient();
 
+  // Fetch organization ID
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchOrgId = async () => {
+      setIsOrgIdLoading(true);
+      if (session && isMounted) {
+        try {
+          const token = await session.getToken();
+          const id = await fetchUserOrganizationId(token as string);
+          if (isMounted) {
+            setOrgId(id);
+          }
+        } catch (error) {
+          if (isMounted) {
+            console.error("Error fetching organization ID:", error);
+          }
+        }
+      }
+      if (isMounted) {
+        setIsOrgIdLoading(false);
+      }
+    };
+
+    fetchOrgId();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [session]);
+
+  // Fetch products data
   const { data: products = [], isLoading, error } = useQuery({
-    queryKey: ["products"],
+    queryKey: ["products", orgId],
     queryFn: async () => {
       if (!session) throw new Error("No session found");
+      if (!orgId) throw new Error("Organization ID not found");
       const token = await session.getToken();
       if (!token) throw new Error("Token is null");
       return fetchProducts(token);
     },
-    enabled: !!session,
+    enabled: !!session && !!orgId && !isOrgIdLoading,
   });
 
+  // Create a memoized version of the modal close handler
+  const handleModalClose = useCallback(() => {
+    setIsModalOpen(false);
+    queryClient.invalidateQueries({ queryKey: ["products", orgId] });
+  }, [queryClient, orgId]);
+
+  // Extract unique categories
   const categories = ["All", ...Array.from(new Set(products.map((product: Product) => product.category)))];
 
+  // Filter products
   const filteredProducts = products.filter((product: Product) => {
-    const matchesCategory =
-      selectedCategory === "All" || product.category === selectedCategory;
-    const matchesSearch =
-      searchTerm === "" || product.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
+    const matchesSearch = searchTerm === "" || product.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStock =
       stockFilter === "All" ||
       (stockFilter === "In Stock" && product.stock > 0) ||
@@ -62,7 +105,7 @@ const ProductsPage = () => {
     return matchesCategory && matchesSearch && matchesStock;
   });
 
-  if (isLoading) {
+  if (isLoading || isOrgIdLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <LoadingSpinner className="text-pacific-blue w-10 h-10" />
@@ -76,18 +119,17 @@ const ProductsPage = () => {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      {/* Header Section */}
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-bold text-white">Product List</h1>
         <Button
           className="bg-pacific-blue text-white rounded-lg px-6 py-3 shadow-lg hover:bg-cobalt transition-all duration-300 transform hover:scale-105"
           onClick={() => setIsModalOpen(true)}
+          disabled={!orgId}
         >
           + Add Product
         </Button>
       </div>
 
-      {/* Filters */}
       <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="space-y-2">
           <label htmlFor="search" className="text-sm font-medium text-gray-300">
@@ -137,8 +179,7 @@ const ProductsPage = () => {
         </div>
       </div>
 
-      {/* Product Grid */}
-      <motion.div 
+      <motion.div
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -154,11 +195,12 @@ const ProductsPage = () => {
               <Card className="overflow-hidden bg-gray-800 border-gray-700">
                 <div className="relative h-48 overflow-hidden">
                   <Image
-                    src={product.image || "https://via.placeholder.com/150"}
+                    src={product.imageUrl || "https://via.placeholder.com/150"}
                     alt={product.name}
                     layout="fill"
                     objectFit="cover"
                     className="transition-transform duration-300 hover:scale-110"
+                    unoptimized={true}
                   />
                 </div>
                 <CardHeader>
@@ -182,7 +224,7 @@ const ProductsPage = () => {
                       {product.stock > 10
                         ? "In Stock"
                         : product.stock > 0
-                        ? "Low Stock"
+                        ? `Low Stock (${product.stock})`
                         : "Out of Stock"}
                     </Badge>
                   </div>
@@ -210,13 +252,21 @@ const ProductsPage = () => {
         )}
       </motion.div>
 
-      {/* Add Product Modal */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+      
+      <Dialog 
+        key="add-product-dialog"
+        open={isModalOpen} 
+        onOpenChange={setIsModalOpen}
+      >
         <DialogContent className="sm:max-w-lg bg-gray-800 text-white">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">Add New Product</DialogTitle>
           </DialogHeader>
-          <AddProducts />
+          {/* Use memo'd handler and a stable key to preserve component instance */}
+          <AddProducts 
+            key="add-product-form"
+            onClose={handleModalClose} 
+          />
         </DialogContent>
       </Dialog>
     </div>

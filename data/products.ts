@@ -5,10 +5,11 @@ export interface Product {
   price: number;
   category: string;
   stock: number;
-  image: string;
+  imageUrl: string; // Changed from image to imageUrl to match backend
+  orgId: string;
 }
 
-export const BACKEND_URL = "https://test-bos-omega.vercel.app";
+export const BACKEND_URL = "https://my-next-backend-two.vercel.app";
 
 /**
  * Fetch all products.
@@ -93,6 +94,6 @@ export const deleteProductById = async (id: string, token: string): Promise<void
   });
 
   if (!response.ok) {
-    throw new Error(`Error deleting product: ${response.statusText}`);
+    throw new Error(`Error deleting product: “One or more validation errors occurred.”`);
   }
 };

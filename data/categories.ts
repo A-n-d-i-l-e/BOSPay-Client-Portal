@@ -48,12 +48,6 @@ export const addCategory = async (token: string, name: string): Promise<void> =>
   }
 };
 
-/**
- * Update an existing category
- * @param token The authentication token
- * @param oldName The current name of the category
- * @param newName The new name for the category
- */
 export const updateCategory = async (
   token: string,
   oldName: string,
