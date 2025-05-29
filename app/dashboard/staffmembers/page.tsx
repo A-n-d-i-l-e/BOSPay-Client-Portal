@@ -60,7 +60,7 @@ export default function StaffManagementDashboard() {
           throw new Error("Authentication failed: No token received");
         }
 
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const apiUrl = process.env.BACKEND_URL;
         if (!apiUrl) {
           throw new Error("API URL is undefined. Check environment variables.");
         }
