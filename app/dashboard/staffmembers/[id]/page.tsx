@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -33,6 +34,7 @@ export default function StaffDetailsPage() {
         }
 
         const apiUrl = process.env.BACKEND_URL;
+        console.log("BACKEND_URL:", apiUrl);
         if (!apiUrl) {
           setError("API configuration error. Please contact support.");
           console.error("BACKEND_URL is undefined. Check environment variables.");
@@ -40,6 +42,7 @@ export default function StaffDetailsPage() {
           return;
         }
 
+        console.log("Fetching staff details from:", `${apiUrl}/api/staff`, "for staffId:", params.id);
         const response = await fetch(`${apiUrl}/api/staff`, {
           method: "GET",
           headers: {
@@ -48,16 +51,20 @@ export default function StaffDetailsPage() {
           },
         });
 
+        console.log("GET /api/staff response status:", response.status);
         if (!response.ok) {
           const errorText = await response.text();
+          console.error("GET /api/staff error response:", errorText);
           throw new Error(errorText || `HTTP error! Status: ${response.status}`);
         }
 
         const data = await response.json();
+        console.log("GET /api/staff response data:", data);
         const staff = data.staff.find((s: StaffMember) => s.staffId === params.id);
         if (!staff) {
           throw new Error("Staff member not found");
         }
+        console.log("Found staff member:", staff);
         setStaffMember(staff);
       } catch (err) {
         const errorMessage =

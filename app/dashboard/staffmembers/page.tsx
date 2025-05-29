@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -61,6 +62,7 @@ export default function StaffManagementDashboard() {
         }
 
         const apiUrl = process.env.BACKEND_URL;
+        console.log("BACKEND_URL:", apiUrl);
         if (!apiUrl) {
           setError("API configuration error. Please contact support.");
           console.error("BACKEND_URL is undefined. Check environment variables.");
@@ -68,6 +70,7 @@ export default function StaffManagementDashboard() {
           return;
         }
 
+        console.log("Fetching staff from:", `${apiUrl}/api/staff`);
         const response = await fetch(`${apiUrl}/api/staff`, {
           method: "GET",
           headers: {
@@ -76,12 +79,15 @@ export default function StaffManagementDashboard() {
           },
         });
 
+        console.log("GET /api/staff response status:", response.status);
         if (!response.ok) {
           const errorText = await response.text();
+          console.error("GET /api/staff error response:", errorText);
           throw new Error(errorText || `HTTP error! Status: ${response.status}`);
         }
 
         const data = await response.json();
+        console.log("GET /api/staff response data:", data);
         setMembers(data.staff || []);
       } catch (err) {
         const errorMessage =
@@ -129,39 +135,52 @@ export default function StaffManagementDashboard() {
       }
 
       const apiUrl = process.env.BACKEND_URL;
+      console.log("BACKEND_URL for invite:", apiUrl);
       if (!apiUrl) {
         setError("API configuration error. Please contact support.");
         console.error("BACKEND_URL is undefined. Check environment variables.");
         return;
       }
 
+      const payload = {
+        email: inviteEmail,
+        role: inviteRole,
+        firstName: inviteFirstName,
+        lastName: inviteLastName,
+      };
+      console.log("POST /api/staff/invite payload:", payload);
       const response = await fetch(`${apiUrl}/api/staff/invite`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          email: inviteEmail,
-          role: inviteRole,
-          firstName: inviteFirstName,
-          lastName: inviteLastName,
-        }),
+        body: JSON.stringify(payload),
       });
 
+      console.log("POST /api/staff/invite response status:", response.status);
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("POST /api/staff/invite error response:", errorData);
         throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
       }
 
+      const inviteData = await response.json();
+      console.log("POST /api/staff/invite response data:", inviteData);
+
       // Refresh staff list
+      console.log("Refreshing staff list from:", `${apiUrl}/api/staff`);
       const updatedResponse = await fetch(`${apiUrl}/api/staff`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      console.log("GET /api/staff (refresh) response status:", updatedResponse.status);
       if (updatedResponse.ok) {
         const updatedData = await updatedResponse.json();
+        console.log("GET /api/staff (refresh) response data:", updatedData);
         setMembers(updatedData.staff || []);
       } else {
+        const errorText = await updatedResponse.text();
+        console.error("GET /api/staff (refresh) error response:", errorText);
         throw new Error("Failed to refresh staff list after invitation.");
       }
 
@@ -181,127 +200,127 @@ export default function StaffManagementDashboard() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="p-4">
-        <h1 className="text-xl font-bold">Staff Management</h1>
-        <p className="text-gray-500">{error || "Loading staff data..."}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="p-4 space-y-6 w-full max-w-full">
-      {error && (
-        <div className="p-4 bg-red-100 text-red-700 rounded-md">{error}</div>
-      )}
-      <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-bold">Staff Management</h1>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="default" className="w-full sm:w-auto">
-              + Add Staff Member
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Invite New Members</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  placeholder="Enter email"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  type="email"
-                />
-              </div>
-              <div>
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  id="firstName"
-                  placeholder="Enter first name"
-                  value={inviteFirstName}
-                  onChange={(e) => setInviteFirstName(e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  id="lastName"
-                  placeholder="Enter last name"
-                  value={inviteLastName}
-                  onChange={(e) => setInviteLastName(e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="role">Role</Label>
-                <Select
-                  onValueChange={(value) => setInviteRole(value as "manager" | "cashier")}
-                  defaultValue={inviteRole}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="manager">Manager</SelectItem>
-                    <SelectItem value="cashier">Cashier</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="secondary" onClick={() => setIsDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleInviteMembers}>Send Invitation</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <div className="w-full">
-        <Input
-          type="text"
-          placeholder="Search by name or email..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full"
-        />
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredMembers.length > 0 ? (
-          filteredMembers.map((member) => (
-            <Card key={member.staffId} className="w-full">
-              <CardHeader>
-                <CardTitle className="text-lg">
-                  {member.firstName || "N/A"} {member.lastName || ""}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-500 break-words">{member.email}</p>
-                <p className="text-sm font-medium mt-2 capitalize">Role: {member.role}</p>
-              </CardContent>
-              <CardFooter>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleViewDetails(member.staffId)}
-                >
-                  View
+      {loading ? (
+        <div>
+          <h1 className="text-xl font-bold">Staff Management</h1>
+          <p className="text-gray-500">{error || "Loading staff data..."}</p>
+        </div>
+      ) : (
+        <>
+          {error && (
+            <div className="p-4 bg-red-100 text-red-700 rounded-md">{error}</div>
+          )}
+          <div className="flex flex-col gap-4">
+            <h1 className="text-2xl font-bold">Staff Management</h1>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="default" className="w-full sm:w-auto">
+                  + Add Staff Member
                 </Button>
-              </CardFooter>
-            </Card>
-          ))
-        ) : (
-          <div className="col-span-full text-center py-4">
-            No members found.
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Invite New Members</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      placeholder="Enter email"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      type="email"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input
+                      id="firstName"
+                      placeholder="Enter first name"
+                      value={inviteFirstName}
+                      onChange={(e) => setInviteFirstName(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      placeholder="Enter last name"
+                      value={inviteLastName}
+                      onChange={(e) => setInviteLastName(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="role">Role</Label>
+                    <Select
+                      onValueChange={(value) => setInviteRole(value as "manager" | "cashier")}
+                      defaultValue={inviteRole}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="manager">Manager</SelectItem>
+                        <SelectItem value="cashier">Cashier</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="secondary" onClick={() => setIsDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleInviteMembers}>Send Invitation</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
-        )}
-      </div>
+
+          <div className="w-full">
+            <Input
+              type="text"
+              placeholder="Search by name or email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full"
+            />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredMembers.length > 0 ? (
+              filteredMembers.map((member) => (
+                <Card key={member.staffId} className="w-full">
+                  <CardHeader>
+                    <CardTitle className="text-lg">
+                      {member.firstName || "N/A"} {member.lastName || ""}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-500 break-words">{member.email}</p>
+                    <p className="text-sm font-medium mt-2 capitalize">Role: {member.role}</p>
+                  </CardContent>
+                  <CardFooter>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleViewDetails(member.staffId)}
+                    >
+                      View
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-4">
+                No members found.
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
