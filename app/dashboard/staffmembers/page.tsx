@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useOrganization } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 import {
   Card,
   CardContent,
@@ -28,117 +28,168 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
-import { OrganizationMembershipResource } from "@clerk/types";
+
+interface StaffMember {
+  staffId: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  role: string;
+}
 
 export default function StaffManagementDashboard() {
   const router = useRouter();
-  const { organization } = useOrganization();
+  const { getToken } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
-  const [memberships, setMemberships] = useState<OrganizationMembershipResource[]>([]);
+  const [members, setMembers] = useState<StaffMember[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [inviteEmails, setInviteEmails] = useState("");
-  const [inviteRole, setInviteRole] = useState("member");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteFirstName, setInviteFirstName] = useState("");
+  const [inviteLastName, setInviteLastName] = useState("");
+  const [inviteRole, setInviteRole] = useState<"manager" | "cashier">("manager");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // Fetch staff members
   useEffect(() => {
-    const fetchMemberships = async () => {
-      if (organization) {
-        const fetchedMemberships = await organization.getMemberships();
-        setMemberships(fetchedMemberships.data);
+    const fetchStaff = async () => {
+      setLoading(true);
+      try {
+        const token = await getToken();
+        if (!token) {
+          throw new Error("Authentication failed: No token received");
+        }
+
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        if (!apiUrl) {
+          throw new Error("API URL is undefined. Check environment variables.");
+        }
+
+        const response = await fetch(`${apiUrl}/api/staff`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || `HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setMembers(data.staff || []);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to load staff members";
+        setError(errorMessage);
+        console.error("Error fetching staff:", err);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchMemberships();
-  }, [organization]);
+    fetchStaff();
+  }, [getToken]);
 
-  const filteredMembers = memberships.filter((member) => {
-    const userName = member.publicUserData?.firstName?.toLowerCase() || "";
-    const identifier = member.publicUserData?.identifier?.toLowerCase() || "";
-    return (
-      userName.includes(searchTerm.toLowerCase()) ||
-      identifier.includes(searchTerm.toLowerCase())
-    );
+  // Filter members based on search term
+  const filteredMembers = members.filter((member) => {
+    const userName = `${member.firstName || ""} ${member.lastName || ""}`.toLowerCase();
+    const email = member.email?.toLowerCase() || "";
+    return userName.includes(searchTerm.toLowerCase()) || email.includes(searchTerm.toLowerCase());
   });
 
-  const handleViewDetails = (id: string) => {
-    router.push(`/dashboard/staffmembers/${id}`);
+  // Handle viewing staff details
+  const handleViewDetails = (staffId: string) => {
+    router.push(`/dashboard/staffmembers/${staffId}`);
   };
 
+  // Handle inviting new staff members
   const handleInviteMembers = async () => {
-    if (!organization) {
-      alert("Organization is not properly initialized.");
+    if (!inviteEmail || !inviteFirstName || !inviteLastName || !inviteRole) {
+      setError("Please enter email, first name, last name, and select a role");
       return;
     }
 
-    const isValidEmail = (email: string) =>
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-    const emails = inviteEmails.split(/[\s,]+/).filter(isValidEmail);
-
-    if (emails.length === 0) {
-      alert("Please enter at least one valid email address.");
+    // Validate email format
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteEmail);
+    if (!isValidEmail) {
+      setError("Please enter a valid email address");
       return;
     }
 
     try {
-      await organization.inviteMembers({
-        emailAddresses: emails,
-        role: inviteRole,
+      const token = await getToken();
+      if (!token) {
+        throw new Error("Authentication failed: No token received");
+      }
+
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      if (!apiUrl) {
+        throw new Error("API URL is undefined. Check environment variables.");
+      }
+
+      const response = await fetch(`${apiUrl}/api/staff/invite`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: inviteEmail,
+          role: inviteRole,
+          firstName: inviteFirstName,
+          lastName: inviteLastName,
+        }),
       });
 
-      setInviteEmails("");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
+      }
+
+      // Refresh staff list
+      const updatedResponse = await fetch(`${apiUrl}/api/staff`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (updatedResponse.ok) {
+        const updatedData = await updatedResponse.json();
+        setMembers(updatedData.staff || []);
+      } else {
+        throw new Error("Failed to refresh staff list after invitation.");
+      }
+
+      setInviteEmail("");
+      setInviteFirstName("");
+      setInviteLastName("");
+      setInviteRole("manager");
       setIsDialogOpen(false);
-      alert("Invitations sent successfully!");
-    } catch (error) {
+      setError(null);
+      alert("Invitation sent successfully!");
+    } catch (err) {
       const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "An unexpected error occurred while sending invitations";
-
-      console.error("Failed to send invitations:", error);
-      alert(`Failed to send invitations: ${errorMessage}`);
+        err instanceof Error ? err.message : "Failed to send invitation";
+      setError(errorMessage);
+      console.error("Invite error:", err);
+      alert(`Failed to send invitation: ${errorMessage}`);
     }
   };
 
-  const handleRemoveMember = async (membershipId: string, memberRole: string) => {
-    if (!organization) {
-      alert("Organization is not properly initialized.");
-      return;
-    }
-
-    if (memberRole === "admin") {
-      alert("You cannot remove an admin.");
-      return;
-    }
-
-    try {
-      await organization.removeMember(membershipId);
-      alert("Member removed successfully.");
-      const updatedMemberships = memberships.filter(
-        (member) => member.id !== membershipId
-      );
-      setMemberships(updatedMemberships);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "An unexpected error occurred while removing the member";
-
-      console.error("Failed to remove member:", error);
-      alert(`Failed to remove member: ${errorMessage}`);
-    }
-  };
-
-  if (!organization) {
+  if (loading) {
     return (
       <div className="p-4">
         <h1 className="text-xl font-bold">Staff Management</h1>
-        <p className="text-gray-500">Loading organization data...</p>
+        <p className="text-gray-500">Loading staff data...</p>
       </div>
     );
   }
 
   return (
     <div className="p-4 space-y-6 w-full max-w-full">
+      {error && (
+        <div className="p-4 bg-red-100 text-red-700 rounded-md">{error}</div>
+      )}
       <div className="flex flex-col gap-4">
         <h1 className="text-2xl font-bold">Staff Management</h1>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -153,26 +204,45 @@ export default function StaffManagementDashboard() {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="emails">Emails</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="emails"
-                  placeholder="Enter emails, separated by commas"
-                  value={inviteEmails}
-                  onChange={(e) => setInviteEmails(e.target.value)}
+                  id="email"
+                  placeholder="Enter email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  type="email"
+                />
+              </div>
+              <div>
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  id="firstName"
+                  placeholder="Enter first name"
+                  value={inviteFirstName}
+                  onChange={(e) => setInviteFirstName(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  placeholder="Enter last name"
+                  value={inviteLastName}
+                  onChange={(e) => setInviteLastName(e.target.value)}
                 />
               </div>
               <div>
                 <Label htmlFor="role">Role</Label>
                 <Select
-                  onValueChange={(value) => setInviteRole(value)}
+                  onValueChange={(value) => setInviteRole(value as "manager" | "cashier")}
                   defaultValue={inviteRole}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select Role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="member">Member</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="cashier">Cashier</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -181,7 +251,7 @@ export default function StaffManagementDashboard() {
               <Button variant="secondary" onClick={() => setIsDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleInviteMembers}>Send Invitations</Button>
+              <Button onClick={handleInviteMembers}>Send Invitation</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -200,35 +270,23 @@ export default function StaffManagementDashboard() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filteredMembers.length > 0 ? (
           filteredMembers.map((member) => (
-            <Card key={member.id} className="w-full">
+            <Card key={member.staffId} className="w-full">
               <CardHeader>
                 <CardTitle className="text-lg">
-                  {member.publicUserData?.firstName || "N/A"}{" "}
-                  {member.publicUserData?.lastName || ""}
+                  {member.firstName || "N/A"} {member.lastName || ""}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-500 break-words">
-                  {member.publicUserData?.identifier ?? "N/A"}
-                </p>
-                <p className="text-sm font-medium mt-2 capitalize">
-                  Role: {member.role}
-                </p>
+                <p className="text-sm text-gray-500 break-words">{member.email}</p>
+                <p className="text-sm font-medium mt-2 capitalize">Role: {member.role}</p>
               </CardContent>
-              <CardFooter className="flex justify-between">
+              <CardFooter>
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => handleViewDetails(member.publicUserData?.userId ?? "")}
+                  onClick={() => handleViewDetails(member.staffId)}
                 >
                   View
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => handleRemoveMember(member.id, member.role)}
-                >
-                  Remove
                 </Button>
               </CardFooter>
             </Card>
@@ -242,4 +300,3 @@ export default function StaffManagementDashboard() {
     </div>
   );
 }
-
