@@ -52,7 +52,7 @@ export default function StaffManagementDashboard() {
 
   // Fetch staff members
   useEffect(() => {
-    console.log("API URL:", process.env.BACKEND_URL);
+    
     const fetchStaff = async () => {
       setLoading(true);
       try {
@@ -65,6 +65,7 @@ export default function StaffManagementDashboard() {
         if (!apiUrl) {
           throw new Error("API URL is undefined. Check environment variables.");
         }
+        console.log("API URL:", process.env.BACKEND_URL);
 
         const response = await fetch(`${apiUrl}/api/staff`, {
           method: "GET",
