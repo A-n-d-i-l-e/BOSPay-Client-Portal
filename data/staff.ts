@@ -14,8 +14,8 @@ export const BACKEND_URL = "https://my-next-backend-two.vercel.app";
  * @param token Clerk's session token.
  */
 export const fetchStaff = async (token: string): Promise<StaffMember[]> => {
-  const response = await fetch(`${BACKEND_URL}/api/staff/${token}`, {
-    method: "POST",
+  const response = await fetch(`${BACKEND_URL}/api/staff`, {
+    method: "GET",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
@@ -45,7 +45,7 @@ export const inviteStaff = async (
   },
   token: string
 ): Promise<StaffMember> => {
-  const response = await fetch(`${BACKEND_URL}/api/staff/inviteStaff`, {
+  const response = await fetch(`${BACKEND_URL}/api/staff/invite`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -59,5 +59,6 @@ export const inviteStaff = async (
     throw new Error(errorData.message || `Error inviting staff: ${response.statusText}`);
   }
 
-  return response.json();
+  const data = await response.json();
+  return data.staff;
 };
