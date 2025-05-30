@@ -2,7 +2,7 @@ export interface Category {
   name: string;
 }
 
-export const BACKEND_URL = "https://test-bos-omega.vercel.app";
+export const BACKEND_URL = "https://my-next-backend-two.vercel.app";
 
 /**
  * Fetch all categories
