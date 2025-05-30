@@ -1,9 +1,10 @@
-
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@clerk/nextjs";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "@clerk/nextjs";
+import { fetchStaff, inviteStaff, StaffMember } from "@/data/staff";
 import {
   Card,
   CardContent,
@@ -29,81 +30,76 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
-
-interface StaffMember {
-  staffId: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  role: string;
-}
+import { LoadingSpinner } from "@/components/ui/loader";
 
 export default function StaffManagementDashboard() {
   const router = useRouter();
-  const { getToken } = useAuth();
+  const { session } = useSession();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
-  const [members, setMembers] = useState<StaffMember[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteFirstName, setInviteFirstName] = useState("");
   const [inviteLastName, setInviteLastName] = useState("");
   const [inviteRole, setInviteRole] = useState<"manager" | "cashier">("manager");
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch staff members
-  useEffect(() => {
-    const fetchStaff = async () => {
-      setLoading(true);
-      try {
-        const token = await getToken();
-        if (!token) {
-          throw new Error("Authentication failed: No token received");
-        }
+  const { data: members = [], isLoading, error: queryError } = useQuery({
+    queryKey: ["staff"],
+    queryFn: async () => {
+      if (!session) throw new Error("No session found");
+      const token = await session.getToken();
+      if (!token) throw new Error("Token is null");
+      console.log("Fetching staff with token:", token);
+      return fetchStaff(token);
+    },
+    enabled: !!session,
+  });
 
-        const apiUrl = process.env.BACKEND_URL;
-        console.log("BACKEND_URL:", apiUrl);
-        if (!apiUrl) {
-          setError("API configuration error. Please contact support.");
-          console.error("BACKEND_URL is undefined. Check environment variables.");
-          setLoading(false);
-          return;
-        }
-
-        console.log("Fetching staff from:", `${apiUrl}/api/staff`);
-        const response = await fetch(`${apiUrl}/api/staff`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        console.log("GET /api/staff response status:", response.status);
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("GET /api/staff error response:", errorText);
-          throw new Error(errorText || `HTTP error! Status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log("GET /api/staff response data:", data);
-        setMembers(data.staff || []);
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to load staff members";
-        setError(errorMessage);
-        console.error("Error fetching staff:", err);
-      } finally {
-        setLoading(false);
+  // Invite staff mutation
+  const inviteMutation = useMutation({
+    mutationFn: async () => {
+      if (!session) throw new Error("No session found");
+      const token = await session.getToken();
+      if (!token) throw new Error("Token is null");
+      if (!inviteEmail || !inviteFirstName || !inviteLastName || !inviteRole) {
+        throw new Error("Please enter email, first name, last name, and select a role");
       }
-    };
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteEmail)) {
+        throw new Error("Please enter a valid email address");
+      }
 
-    fetchStaff();
-  }, [getToken]);
+      const payload = {
+        email: inviteEmail,
+        role: inviteRole,
+        firstName: inviteFirstName,
+        lastName: inviteLastName,
+      };
+      console.log("POST /api/staff/invite payload:", payload);
+      return inviteStaff(payload, token);
+    },
+    onSuccess: (data) => {
+      console.log("POST /api/staff/invite response data:", data);
+      queryClient.invalidateQueries({ queryKey: ["staff"] });
+      setInviteEmail("");
+      setInviteFirstName("");
+      setInviteLastName("");
+      setInviteRole("manager");
+      setIsDialogOpen(false);
+      setError(null);
+      alert("Invitation sent successfully!");
+    },
+    onError: (err: Error) => {
+      const errorMessage = err.message || "Failed to send invitation";
+      setError(errorMessage);
+      console.error("Invite error:", err);
+      alert(`Failed to send invitation: ${errorMessage}`);
+    },
+  });
 
   // Filter members based on search term
-  const filteredMembers = members.filter((member) => {
+  const filteredMembers = members.filter((member: StaffMember) => {
     const userName = `${member.firstName || ""} ${member.lastName || ""}`.toLowerCase();
     const email = member.email?.toLowerCase() || "";
     return userName.includes(searchTerm.toLowerCase()) || email.includes(searchTerm.toLowerCase());
@@ -114,213 +110,146 @@ export default function StaffManagementDashboard() {
     router.push(`/dashboard/staffmembers/${staffId}`);
   };
 
-  // Handle inviting new staff members
-  const handleInviteMembers = async () => {
-    if (!inviteEmail || !inviteFirstName || !inviteLastName || !inviteRole) {
-      setError("Please enter email, first name, last name, and select a role");
-      return;
-    }
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <LoadingSpinner className="text-pacific-blue w-10 h-10" />
+      </div>
+    );
+  }
 
-    // Validate email format
-    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteEmail);
-    if (!isValidEmail) {
-      setError("Please enter a valid email address");
-      return;
-    }
-
-    try {
-      const token = await getToken();
-      if (!token) {
-        throw new Error("Authentication failed: No token received");
-      }
-
-      const apiUrl = process.env.BACKEND_URL;
-      console.log("BACKEND_URL for invite:", apiUrl);
-      if (!apiUrl) {
-        setError("API configuration error. Please contact support.");
-        console.error("BACKEND_URL is undefined. Check environment variables.");
-        return;
-      }
-
-      const payload = {
-        email: inviteEmail,
-        role: inviteRole,
-        firstName: inviteFirstName,
-        lastName: inviteLastName,
-      };
-      console.log("POST /api/staff/invite payload:", payload);
-      const response = await fetch(`${apiUrl}/api/staff/invite`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      console.log("POST /api/staff/invite response status:", response.status);
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("POST /api/staff/invite error response:", errorData);
-        throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
-      }
-
-      const inviteData = await response.json();
-      console.log("POST /api/staff/invite response data:", inviteData);
-
-      // Refresh staff list
-      console.log("Refreshing staff list from:", `${apiUrl}/api/staff`);
-      const updatedResponse = await fetch(`${apiUrl}/api/staff`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      console.log("GET /api/staff (refresh) response status:", updatedResponse.status);
-      if (updatedResponse.ok) {
-        const updatedData = await updatedResponse.json();
-        console.log("GET /api/staff (refresh) response data:", updatedData);
-        setMembers(updatedData.staff || []);
-      } else {
-        const errorText = await updatedResponse.text();
-        console.error("GET /api/staff (refresh) error response:", errorText);
-        throw new Error("Failed to refresh staff list after invitation.");
-      }
-
-      setInviteEmail("");
-      setInviteFirstName("");
-      setInviteLastName("");
-      setInviteRole("manager");
-      setIsDialogOpen(false);
-      setError(null);
-      alert("Invitation sent successfully!");
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to send invitation";
-      setError(errorMessage);
-      console.error("Invite error:", err);
-      alert(`Failed to send invitation: ${errorMessage}`);
-    }
-  };
+  if (queryError) {
+    return <div className="p-6 text-red-500">Error: {queryError.message}</div>;
+  }
 
   return (
-    <div className="p-4 space-y-6 w-full max-w-full">
-      {loading ? (
-        <div>
-          <h1 className="text-xl font-bold">Staff Management</h1>
-          <p className="text-gray-500">{error || "Loading staff data..."}</p>
-        </div>
-      ) : (
-        <>
-          {error && (
-            <div className="p-4 bg-red-100 text-red-700 rounded-md">{error}</div>
-          )}
-          <div className="flex flex-col gap-4">
-            <h1 className="text-2xl font-bold">Staff Management</h1>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="default" className="w-full sm:w-auto">
-                  + Add Staff Member
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Invite New Members</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      placeholder="Enter email"
-                      value={inviteEmail}
-                      onChange={(e) => setInviteEmail(e.target.value)}
-                      type="email"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input
-                      id="firstName"
-                      placeholder="Enter first name"
-                      value={inviteFirstName}
-                      onChange={(e) => setInviteFirstName(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input
-                      id="lastName"
-                      placeholder="Enter last name"
-                      value={inviteLastName}
-                      onChange={(e) => setInviteLastName(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="role">Role</Label>
-                    <Select
-                      onValueChange={(value) => setInviteRole(value as "manager" | "cashier")}
-                      defaultValue={inviteRole}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="manager">Manager</SelectItem>
-                        <SelectItem value="cashier">Cashier</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="secondary" onClick={() => setIsDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleInviteMembers}>Send Invitation</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          <div className="w-full">
-            <Input
-              type="text"
-              placeholder="Search by name or email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full"
-            />
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredMembers.length > 0 ? (
-              filteredMembers.map((member) => (
-                <Card key={member.staffId} className="w-full">
-                  <CardHeader>
-                    <CardTitle className="text-lg">
-                      {member.firstName || "N/A"} {member.lastName || ""}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-gray-500 break-words">{member.email}</p>
-                    <p className="text-sm font-medium mt-2 capitalize">Role: {member.role}</p>
-                  </CardContent>
-                  <CardFooter>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleViewDetails(member.staffId)}
-                    >
-                      View
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))
-            ) : (
-              <div className="col-span-full text-center py-4">
-                No members found.
-              </div>
-            )}
-          </div>
-        </>
+    <div className="p-6 max-w-7xl mx-auto">
+      {error && (
+        <div className="p-4 bg-red-100 text-red-700 rounded-md mb-6">{error}</div>
       )}
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-3xl font-bold text-white">Staff Management</h1>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-pacific-blue text-white rounded-lg px-6 py-3 shadow-lg hover:bg-cobalt">
+              + Add Staff Member
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px] bg-gray-800 text-white">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold">Invite New Members</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="email" className="text-gray-300">Email</Label>
+                <Input
+                  id="email"
+                  placeholder="Enter email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  type="email"
+                  className="bg-gray-700 text-gray-200 border-gray-600"
+                />
+              </div>
+              <div>
+                <Label htmlFor="firstName" className="text-gray-300">First Name</Label>
+                <Input
+                  id="firstName"
+                  placeholder="Enter first name"
+                  value={inviteFirstName}
+                  onChange={(e) => setInviteFirstName(e.target.value)}
+                  className="bg-gray-700 text-gray-200 border-gray-600"
+                />
+              </div>
+              <div>
+                <Label htmlFor="lastName" className="text-gray-300">Last Name</Label>
+                <Input
+                  id="lastName"
+                  placeholder="Enter last name"
+                  value={inviteLastName}
+                  onChange={(e) => setInviteLastName(e.target.value)}
+                  className="bg-gray-700 text-gray-200 border-gray-600"
+                />
+              </div>
+              <div>
+                <Label htmlFor="role" className="text-gray-300">Role</Label>
+                <Select
+                  onValueChange={(value) => setInviteRole(value as "manager" | "cashier")}
+                  defaultValue={inviteRole}
+                >
+                  <SelectTrigger className="bg-gray-700 text-gray-200 border-gray-600">
+                    <SelectValue placeholder="Select Role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="cashier">Cashier</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="secondary"
+                onClick={() => setIsDialogOpen(false)}
+                className="bg-gray-600 hover:bg-gray-500"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => inviteMutation.mutate()}
+                disabled={inviteMutation.isPending}
+                className="bg-pacific-blue hover:bg-cobalt"
+              >
+                {inviteMutation.isPending ? "Sending..." : "Send Invitation"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="mb-8">
+        <Input
+          type="text"
+          placeholder="Search by name or email..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="h-10 w-full rounded-lg border border-gray-600 text-gray-200 bg-gray-800 px-4 text-sm"
+        />
+      </div>
+
+      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        {filteredMembers.length > 0 ? (
+          filteredMembers.map((member) => (
+            <Card key={member.staffId} className="bg-gray-800 border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold text-white">
+                  {member.firstName || "N/A"} {member.lastName || ""}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-400 break-words">{member.email}</p>
+                <p className="text-sm font-medium mt-2 capitalize text-gray-200">
+                  Role: {member.role}
+                </p>
+              </CardContent>
+              <CardFooter>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleViewDetails(member.staffId)}
+                  className="w-full bg-pacific-blue hover:bg-cobalt text-white"
+                >
+                  View
+                </Button>
+              </CardFooter>
+            </Card>
+          ))
+        ) : (
+          <div className="col-span-full text-center text-gray-400 text-lg py-12">
+            No staff members found.
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,103 +1,62 @@
-
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "@clerk/nextjs";
+import { useQuery } from "@tanstack/react-query";
+import { useSession } from "@clerk/nextjs";
+import { fetchStaff, StaffMember } from "@/data/staff";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
-interface StaffMember {
-  staffId: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  role: string;
-}
+import { LoadingSpinner } from "@/components/ui/loader";
 
 export default function StaffDetailsPage() {
   const router = useRouter();
   const params = useParams();
-  const { getToken } = useAuth();
-  const [staffMember, setStaffMember] = useState<StaffMember | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { session } = useSession();
 
-  // Fetch staff details from the staff list
-  useEffect(() => {
-    const fetchStaffDetails = async () => {
-      setLoading(true);
-      try {
-        const token = await getToken();
-        if (!token) {
-          throw new Error("Authentication failed: No token received");
-        }
+  // Fetch staff members
+  const { data: members = [], isLoading, error } = useQuery({
+    queryKey: ["staff"],
+    queryFn: async () => {
+      if (!session) throw new Error("No session found");
+      const token = await session.getToken();
+      if (!token) throw new Error("Token is null");
+      console.log("Fetching staff details with token:", token);
+      return fetchStaff(token);
+    },
+    enabled: !!session,
+  });
 
-        const apiUrl = process.env.BACKEND_URL;
-        console.log("BACKEND_URL:", apiUrl);
-        if (!apiUrl) {
-          setError("API configuration error. Please contact support.");
-          console.error("BACKEND_URL is undefined. Check environment variables.");
-          setLoading(false);
-          return;
-        }
+  // Find the staff member by staffId
+  const staffMember = members.find((s: StaffMember) => s.staffId === params.id);
+  console.log("Found staff member:", staffMember);
 
-        console.log("Fetching staff details from:", `${apiUrl}/api/staff`, "for staffId:", params.id);
-        const response = await fetch(`${apiUrl}/api/staff`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        console.log("GET /api/staff response status:", response.status);
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("GET /api/staff error response:", errorText);
-          throw new Error(errorText || `HTTP error! Status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log("GET /api/staff response data:", data);
-        const staff = data.staff.find((s: StaffMember) => s.staffId === params.id);
-        if (!staff) {
-          throw new Error("Staff member not found");
-        }
-        console.log("Found staff member:", staff);
-        setStaffMember(staff);
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to load staff details";
-        setError(errorMessage);
-        console.error("Error fetching staff details:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStaffDetails();
-  }, [getToken, params.id]);
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="container mx-auto py-8 px-4">
-        <p className="text-gray-500">{error || "Loading staff details..."}</p>
+      <div className="flex items-center justify-center h-screen">
+        <LoadingSpinner className="text-pacific-blue w-10 h-10" />
       </div>
     );
   }
 
-  if (!staffMember || error) {
+  if (error) {
+    return <div className="p-6 text-red-500">Error: {error.message}</div>;
+  }
+
+  if (!staffMember) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <Card className="p-6">
+        <Card className="p-6 bg-gray-800 border-gray-700">
           <CardHeader>
-            <CardTitle className="text-red-600">Staff Member Not Found</CardTitle>
+            <CardTitle className="text-red-500 text-2xl font-bold">Staff Member Not Found</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-500">{error || "We couldn't find the staff member you're looking for."}</p>
+            <p className="text-gray-400">We couldn&apos;t find the staff member you&apos;re looking for.</p>
           </CardContent>
-          <Button onClick={() => router.push("/dashboard/staffmembers")} className="mt-4">
+          <Button
+            onClick={() => router.push("/dashboard/staffmembers")}
+            className="mt-4 bg-pacific-blue hover:bg-cobalt text-white"
+          >
             Back to Staff
           </Button>
         </Card>
@@ -106,26 +65,26 @@ export default function StaffDetailsPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="p-6 max-w-7xl mx-auto">
       <Button
         variant="ghost"
         onClick={() => router.push("/dashboard/staffmembers")}
-        className="mb-6"
+        className="mb-6 text-gray-300 hover:text-white"
       >
         ← Back to Staff
       </Button>
 
-      <Card>
+      <Card className="bg-gray-800 border-gray-700">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold">
+          <CardTitle className="text-2xl font-bold text-white">
             {staffMember.firstName || "N/A"} {staffMember.lastName || ""}
           </CardTitle>
-          <p className="text-gray-500">{staffMember.email}</p>
+          <p className="text-gray-400">{staffMember.email}</p>
         </CardHeader>
         <CardContent>
           <div>
-            <h3 className="text-lg font-medium">Role</h3>
-            <p className="text-gray-600 capitalize">{staffMember.role}</p>
+            <h3 className="text-lg font-medium text-gray-200">Role</h3>
+            <p className="text-gray-400 capitalize">{staffMember.role}</p>
           </div>
         </CardContent>
       </Card>
