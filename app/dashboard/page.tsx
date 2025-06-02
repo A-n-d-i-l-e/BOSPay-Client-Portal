@@ -1,23 +1,52 @@
 "use client";
 
 import React, { useState } from "react";
-// import StockAlert from "@/components/StockAlert";
+import { useQuery } from "@tanstack/react-query";
+import { useSession, useUser } from "@clerk/nextjs";
+import { fetchBalance } from "@/data/balance";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, DollarSign, Activity, CreditCard } from 'lucide-react';
-import { useUser } from "@clerk/nextjs";
+import { Users, DollarSign, Activity, CreditCard } from "lucide-react";
 import SalesChart from "@/components/SalesChart";
 import ProductPieChart from "@/components/ProductPieChart";
 import BestProduct from "@/components/BestProduct";
 import StockAlert from "@/components/StockAlert";
+import { LoadingSpinner } from "@/components/ui/loader";
+
+interface Sale {
+  product: string;
+  customer: string;
+  price: number;
+  payment: string;
+}
 
 export default function DashboardPage() {
   const { user } = useUser();
+  const { session } = useSession();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
 
-  const recentSales: any[] = [];
+  // Fetch balance
+  const { data: balanceData, isLoading: isBalanceLoading, error: balanceError } = useQuery({
+    queryKey: ["balance"],
+    queryFn: async () => {
+      if (!session) throw new Error("No session found");
+      const token = await session.getToken();
+      if (!token) throw new Error("Token is null");
+      console.log("Fetching balance with token:", token);
+      return fetchBalance(token);
+    },
+    enabled: !!session,
+  });
+
+  // Calculate percentage change
+  const percentageChange =
+    balanceData && balanceData.previousBalance !== 0
+      ? (((balanceData.balance - balanceData.previousBalance) / balanceData.previousBalance) * 100).toFixed(1)
+      : "0";
+
+  const recentSales: Sale[] = [];
 
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-8 font-poppins px-2 sm:px-4 lg:px-6 pb-4 sm:pb-6 lg:pb-8">
@@ -43,13 +72,25 @@ export default function DashboardPage() {
         <Card className="bg-gradient-to-tr from-cobalt to-pacific-blue p-3 sm:p-4">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs sm:text-sm font-medium text-white">
-              Total Revenue
+              Total Balance
             </CardTitle>
             <DollarSign className="h-4 w-4 text-dark-turquoise" />
           </CardHeader>
           <CardContent>
-            <div className="text-base sm:text-lg lg:text-2xl font-bold text-white">R0</div>
-            <p className="text-xs text-dark-turquoise">0% from last month</p>
+            {isBalanceLoading ? (
+              <LoadingSpinner className="text-dark-turquoise w-6 h-6" />
+            ) : balanceError ? (
+              <div className="text-xs text-red-300">
+                {balanceError instanceof Error ? balanceError.message : "Error loading balance"}
+              </div>
+            ) : (
+              <>
+                <div className="text-base sm:text-lg lg:text-2xl font-bold text-white">
+                  R{balanceData?.balance.toFixed(2) || "0.00"}
+                </div>
+                <p className="text-xs text-dark-turquoise">{percentageChange}% from last month</p>
+              </>
+            )}
           </CardContent>
         </Card>
         <Card className="bg-gradient-to-tr from-sapphire to-dark-turquoise p-3 sm:p-4">
@@ -95,7 +136,6 @@ export default function DashboardPage() {
         <div className="grid gap-4 lg:col-span-2">
           <SalesChart />
         </div>
-
         <StockAlert />
       </div>
 
