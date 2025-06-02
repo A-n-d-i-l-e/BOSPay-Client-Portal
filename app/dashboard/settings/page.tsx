@@ -112,14 +112,14 @@ export default function SettingsPage() {
             <Label htmlFor="dark-mode">Dark Mode</Label>
             <Switch id="dark-mode" defaultChecked />
           </div>
-          <div className="flex items-center justify-between">
+          {/* <div className="flex items-center justify-between">
             <Label htmlFor="language">Language</Label>
             <select id="language" className="rounded-md border p-2">
               <option value="en">English</option>
               <option value="es">Spanish</option>
               <option value="fr">French</option>
             </select>
-          </div>
+          </div> */}
         </CardContent>
       </Card>
 
@@ -128,7 +128,7 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle>Store Settings</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        {/* <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="store-currency">Currency</Label>
             <select id="store-currency" className="rounded-md border p-2">
@@ -141,7 +141,7 @@ export default function SettingsPage() {
             <Label htmlFor="store-tax">Tax Rate (%)</Label>
             <Input id="store-tax" type="number" placeholder="Enter tax rate" defaultValue="15" />
           </div>
-        </CardContent>
+        </CardContent> */}
       </Card>
 
       {/* Billing Settings */}
