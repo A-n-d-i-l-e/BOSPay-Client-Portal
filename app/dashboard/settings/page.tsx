@@ -124,11 +124,11 @@ export default function SettingsPage() {
       </Card>
 
       {/* Store Settings */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle>Store Settings</CardTitle>
         </CardHeader>
-        {/* <CardContent className="space-y-4">
+        <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="store-currency">Currency</Label>
             <select id="store-currency" className="rounded-md border p-2">
@@ -141,11 +141,11 @@ export default function SettingsPage() {
             <Label htmlFor="store-tax">Tax Rate (%)</Label>
             <Input id="store-tax" type="number" placeholder="Enter tax rate" defaultValue="15" />
           </div>
-        </CardContent> */}
-      </Card>
+        </CardContent>
+      </Card> */}
 
       {/* Billing Settings */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle>Billing</CardTitle>
         </CardHeader>
@@ -156,7 +156,7 @@ export default function SettingsPage() {
           </div>
           <Button variant="secondary">Update Billing Info</Button>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Security Settings */}
       <Card>
