@@ -103,7 +103,7 @@ export default function SettingsPage() {
       </Card>
 
       {/* User Preferences */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle>User Preferences</CardTitle>
         </CardHeader>
@@ -112,16 +112,16 @@ export default function SettingsPage() {
             <Label htmlFor="dark-mode">Dark Mode</Label>
             <Switch id="dark-mode" defaultChecked />
           </div>
-          {/* <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between">
             <Label htmlFor="language">Language</Label>
             <select id="language" className="rounded-md border p-2">
               <option value="en">English</option>
               <option value="es">Spanish</option>
               <option value="fr">French</option>
             </select>
-          </div> */}
+          </div>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Store Settings */}
       {/* <Card>
