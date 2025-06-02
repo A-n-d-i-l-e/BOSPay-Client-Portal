@@ -58,7 +58,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Editable Store Slug */}
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="store-slug">Store Slug</Label>
             <Input
               id="store-slug"
@@ -67,7 +67,7 @@ export default function SettingsPage() {
               onChange={(e) => setStoreSlug(e.target.value)}
               disabled={!membership?.role.includes("admin")} // Restrict editing to admins
             />
-          </div>
+          </div> */}
 
           {/* Save Button */}
           <Button
@@ -159,7 +159,7 @@ export default function SettingsPage() {
       </Card> */}
 
       {/* Security Settings */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle>Security</CardTitle>
         </CardHeader>
@@ -173,7 +173,7 @@ export default function SettingsPage() {
             <Button variant="secondary">Change Password</Button>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 }
