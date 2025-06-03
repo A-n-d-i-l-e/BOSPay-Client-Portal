@@ -215,19 +215,19 @@ const SalesChart: React.FC = () => {
                 </div>
 
                 <h4 className="text-2xl font-bold text-white mb-3">Ready to track your first sale?</h4>
-                <p className="text-white mb-6 leading-relaxed">
+                <p className="text-gray-300 mb-6 leading-relaxed">
                   Your sales dashboard is waiting for data. Create your first invoice to start tracking revenue and growth.
                 </p>
 
                 <div className="space-y-3">
                   <Button
                     asChild
-                    className="bg-[#435ee5] hover:bg-[#435ee5]/90 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                    className="bg-[#05C3DE] hover:bg-[#05C3DE]/90 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
                   >
-                    <Link href="/dashboard/invoices/new" className="flex items-center gap-2">
+                    
                       <Plus size={18} />
                       Create Your First Invoice
-                    </Link>
+                    
                   </Button>
 
                   <p className="text-sm text-gray-400">Or wait for confirmed transactions to appear here</p>
