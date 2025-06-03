@@ -1,3 +1,4 @@
+
 "use client";
 
 import type React from "react";
@@ -7,12 +8,13 @@ import { useAuth } from "@clerk/nextjs";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Info, TrendingUp, Plus, BarChart3 } from "lucide-react";
+import { Info, TrendingUp, Plus } from "lucide-react";
 import { Select, SelectItem, SelectTrigger, SelectContent, SelectValue } from "@/components/ui/select";
 import { fetchConfirmedTransactions, type ConfirmedTransaction } from "@/data/transactions";
 import { fetchInvoiceRecords, type InvoiceRecord } from "@/data/invoiceRecords";
 import { fetchUserOrganizationId } from "@/data/org";
 import Link from "next/link";
+import { BarChart3 } from "lucide-react";
 
 // Interface for chart data
 interface ChartData {
@@ -202,25 +204,25 @@ const SalesChart: React.FC = () => {
             </div>
           ) : data.length === 0 ? (
             <div className="absolute inset-0 flex items-center justify-center p-6">
-              <div className="bg-gray-800/30 backdrop-blur-md border border-gray-600/50 rounded-xl shadow-lg p-8 text-center max-w-md w-full">
+              <div className="text-center max-w-md">
                 <div className="relative mb-6">
-                  <div className="w-24 h-24 bg-gradient-to-br from-[#171F2E] to-[#435ee5] rounded-full flex items-center justify-center mx-auto mb-4">
-                    <BarChart3 className="text-[#435ee5]" size={40} />
+                  <div className="w-24 h-24 bg-[#435ee5] rounded-full flex items-center justify-center mx-auto mb-4">
+                    <BarChart3 className="text-white" size={40} />
                   </div>
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#435ee5] rounded-full flex items-center justify-center">
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#435ee5] rounded-full flex items-center justify-center ring-2 ring-[#435ee5]/50">
                     <Plus className="text-white" size={16} />
                   </div>
                 </div>
 
-                <h4 className="text-2xl font-bold text-white">Ready to track your first sale?</h4>
-                <p className="text-gray-300 mb-6 leading-relaxed">
+                <h4 className="text-2xl font-bold text-white mb-3">Ready to track your first sale?</h4>
+                <p className="text-[#435ee5] mb-6 leading-relaxed">
                   Your sales dashboard is waiting for data. Create your first invoice to start tracking revenue and growth.
                 </p>
 
                 <div className="space-y-3">
                   <Button
                     asChild
-                    className="bg-gradient-to-r from-[#171F2E] to-[#435ee5] hover:from-[#171F2E]/90 hover:to-[#435ee5]/90 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                    className="bg-[#435ee5] hover:bg-[#435ee5]/90 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
                   >
                     <Link href="/dashboard/invoices/new" className="flex items-center gap-2">
                       <Plus size={18} />
