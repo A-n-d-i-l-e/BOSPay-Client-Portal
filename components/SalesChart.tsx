@@ -199,7 +199,7 @@ const SalesChart: React.FC = () => {
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#435ee5] mx-auto mb-4"></div>
-                <p className="text-white text-lg font-medium">Loading sales data...</p>
+                {/* <p className="text-white text-lg font-medium">Loading sales data...</p> */}
               </div>
             </div>
           ) : data.length === 0 ? (
@@ -207,10 +207,10 @@ const SalesChart: React.FC = () => {
               <div className="text-center max-w-md">
                 <div className="relative mb-6">
                   <div className="w-24 h-24 bg-[#05C3DE] rounded-full flex items-center justify-center mx-auto mb-4">
-                    <BarChart3 className="text-white" size={40} />
+                    <BarChart3 className="text-[#a45ee5]" size={40} />
                   </div>
                   <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#05C3DE] rounded-full flex items-center justify-center ring-2 ring-[#05C3DE]/50">
-                    <Plus className="text-white" size={16} />
+                    <Plus className="text-[#a45ee5]" size={16} />
                   </div>
                 </div>
 
