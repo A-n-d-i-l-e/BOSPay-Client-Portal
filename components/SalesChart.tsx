@@ -166,7 +166,7 @@ const SalesChart: React.FC = () => {
   const formatYAxis = (value: number): string => `R${value}`
 
   return (
-    <Card className="w-full bg-gradient-to-br from-slate-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 border-0 shadow-lg">
+    <Card className="w-full bg-gradient-to-br from-[#171F2E] to-[#071D49] text-white relative">
       <CardContent className="p-6">
         <div className="flex flex-row items-center justify-between mb-6">
           <div className="flex items-center gap-3">
