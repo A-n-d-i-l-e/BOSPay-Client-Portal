@@ -216,10 +216,10 @@ const SalesChart: React.FC = () => {
 
                 <h4 className="text-2xl font-bold text-white mb-3">Ready to track your first sale?</h4>
                 <p className="text-gray-300 mb-6 leading-relaxed">
-                  Your sales dashboard is waiting for data. Create your first invoice to start tracking revenue and growth.
+                  Your sales dashboard is waiting for data. Start making sales in-app to start tracking revenue and growth.
                 </p>
 
-                <div className="space-y-3">
+                {/* <div className="space-y-3">
                   <Button
                     asChild
                     className="bg-[#05C3DE] hover:bg-[#05C3DE]/90 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
@@ -231,7 +231,7 @@ const SalesChart: React.FC = () => {
                   </Button>
 
                   <p className="text-sm text-gray-400">Or wait for confirmed transactions to appear here</p>
-                </div>
+                </div> */}
               </div>
             </div>
           ) : (
