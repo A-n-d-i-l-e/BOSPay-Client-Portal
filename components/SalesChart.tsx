@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from "react";
@@ -14,7 +15,7 @@ import {
 } from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Info } from "lucide-react";
+import { Info, ShoppingCart } from "lucide-react";
 import {
   Select,
   SelectItem,
@@ -25,6 +26,7 @@ import {
 import { fetchConfirmedTransactions, ConfirmedTransaction } from "@/data/transactions";
 import { fetchInvoiceRecords, InvoiceRecord } from "@/data/invoiceRecords";
 import { fetchUserOrganizationId } from "@/data/org";
+import Link from "next/link";
 
 // Interface for chart data
 interface ChartData {
@@ -36,7 +38,6 @@ interface ChartData {
 const SalesChart: React.FC = () => {
   const { getToken } = useAuth();
   const [filter, setFilter] = useState("7 days");
-  const [showDummyDataInfo, setShowDummyDataInfo] = useState(true);
 
   // Fetch organization ID (needed for Invoice Records)
   const { data: orgId, isLoading: isLoadingOrgId } = useQuery<string | null>({
@@ -209,9 +210,23 @@ const SalesChart: React.FC = () => {
             <div className="absolute inset-0 flex items-center justify-center">
               <p className="text-white text-lg">Loading sales data...</p>
             </div>
-          ) : data.length === 0 && !showDummyDataInfo ? (
+          ) : data.length === 0 ? (
             <div className="absolute inset-0 flex items-center justify-center">
-              <p className="text-white text-lg">No sales data available.</p>
+              <Card className="bg-gray-900 bg-opacity-80 text-white p-6 rounded-lg shadow-md max-w-sm text-center">
+                <ShoppingCart className="mx-auto text-gray-400" size={48} />
+                <h4 className="mt-4 text-lg font-semibold">No Sales Yet</h4>
+                <p className="mt-2 text-sm text-gray-300">
+                  You haven’t made any sales yet. Create an invoice to get started!
+                </p>
+                <Button
+                  asChild
+                  className="mt-4 bg-blue-600 hover:bg-blue-700"
+                >
+                  <Link href="/dashboard/invoices/new">
+                    Create Your First Invoice
+                  </Link>
+                </Button>
+              </Card>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
@@ -270,22 +285,6 @@ const SalesChart: React.FC = () => {
             </ResponsiveContainer>
           )}
         </div>
-
-        {showDummyDataInfo && (
-          <div className="absolute bottom-4 left-4 bg-gray-900 bg-opacity-40 text-white p-4 rounded-lg shadow-md z-10">
-            <p className="text-sm">
-              You are currently viewing a demo of the sales report. This chart displays real transaction data when available.
-            </p>
-            <Button
-              variant="secondary"
-              size="sm"
-              className="mt-2"
-              onClick={() => setShowDummyDataInfo(false)}
-            >
-              Close Demo
-            </Button>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
