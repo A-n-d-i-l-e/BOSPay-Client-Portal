@@ -56,6 +56,7 @@ const statusColorMap: Record<"Paid" | "Due", ChipProps["color"]> = {
 };
 
 const RecentTransactions = () => {
+  console.log("Transactions data:", transactions);
   return (
     <Card className="border border-midnight-express">
       <CardHeader>
