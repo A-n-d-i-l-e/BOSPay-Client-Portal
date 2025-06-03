@@ -1,122 +1,122 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { useAuth } from "@clerk/nextjs"
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend } from "recharts"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Info, TrendingUp, Plus, BarChart3 } from "lucide-react"
-import { Select, SelectItem, SelectTrigger, SelectContent, SelectValue } from "@/components/ui/select"
-import { fetchConfirmedTransactions, type ConfirmedTransaction } from "@/data/transactions"
-import { fetchInvoiceRecords, type InvoiceRecord } from "@/data/invoiceRecords"
-import { fetchUserOrganizationId } from "@/data/org"
-import Link from "next/link"
+import type React from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@clerk/nextjs";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend } from "recharts";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Info, TrendingUp, Plus, BarChart3 } from "lucide-react";
+import { Select, SelectItem, SelectTrigger, SelectContent, SelectValue } from "@/components/ui/select";
+import { fetchConfirmedTransactions, type ConfirmedTransaction } from "@/data/transactions";
+import { fetchInvoiceRecords, type InvoiceRecord } from "@/data/invoiceRecords";
+import { fetchUserOrganizationId } from "@/data/org";
+import Link from "next/link";
 
 // Interface for chart data
 interface ChartData {
-  date: string // e.g., "Jun 01"
-  thisMonth: number // ZAR amount for current month
-  lastMonth: number // ZAR amount for previous month
+  date: string; // e.g., "Jun 01"
+  thisMonth: number; // ZAR amount for current month
+  lastMonth: number; // ZAR amount for previous month
 }
 
 const SalesChart: React.FC = () => {
-  const { getToken } = useAuth()
-  const [filter, setFilter] = useState("7 days")
+  const { getToken } = useAuth();
+  const [filter, setFilter] = useState("7 days");
 
   // Fetch organization ID (needed for Invoice Records)
   const { data: orgId, isLoading: isLoadingOrgId } = useQuery<string | null>({
     queryKey: ["userOrgId"],
     queryFn: async () => {
-      const token = await getToken()
-      if (!token) throw new Error("Authentication token not available")
-      return fetchUserOrganizationId(token)
+      const token = await getToken();
+      if (!token) throw new Error("Authentication token not available");
+      return fetchUserOrganizationId(token);
     },
     staleTime: 1000 * 60 * 60, // 1 hour
-  })
+  });
 
   // Fetch confirmed transactions
   const { data: transactions = [], isLoading: isLoadingTxns } = useQuery<ConfirmedTransaction[]>({
     queryKey: ["confirmedTransactions", "salesChart"],
     queryFn: async () => {
-      const token = await getToken()
-      if (!token) throw new Error("Authentication token not available")
-      return fetchConfirmedTransactions(token)
+      const token = await getToken();
+      if (!token) throw new Error("Authentication token not available");
+      return fetchConfirmedTransactions(token);
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
-  })
+  });
 
   // Fetch invoice records
   const { data: invoices = [], isLoading: isLoadingInvoices } = useQuery<InvoiceRecord[]>({
     queryKey: ["invoiceRecords", orgId],
     queryFn: async () => {
-      if (!orgId) return []
-      const token = await getToken()
-      if (!token) throw new Error("Authentication token not available")
-      return fetchInvoiceRecords(token, orgId)
+      if (!orgId) return [];
+      const token = await getToken();
+      if (!token) throw new Error("Authentication token not available");
+      return fetchInvoiceRecords(token, orgId);
     },
     enabled: !!orgId,
     staleTime: 1000 * 60 * 5, // 5 minutes
-  })
+  });
 
   // Process transactions and invoices into chart data
   const getChartData = (): ChartData[] => {
-    if (!transactions.length && !invoices.length) return []
+    if (!transactions.length && !invoices.length) return [];
 
     // Get current and previous month
-    const now = new Date()
-    const currentMonth = now.getMonth() // 0-11
-    const currentYear = now.getFullYear()
-    const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1
-    const prevMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear
+    const now = new Date();
+    const currentMonth = now.getMonth(); // 0-11
+    const currentYear = now.getFullYear();
+    const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const prevMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
 
     // Filter confirmed transactions and paid invoices
-    const confirmedTxns = transactions.filter((txn) => txn.statusReadable.toLowerCase() === "confirmed")
-    const paidInvoices = invoices.filter((inv) => inv.status.toLowerCase() === "paid")
+    const confirmedTxns = transactions.filter((txn) => txn.statusReadable.toLowerCase() === "confirmed");
+    const paidInvoices = invoices.filter((inv) => inv.status.toLowerCase() === "paid");
 
     // Aggregate by day
-    const dataMap = new Map<string, { thisMonth: number; lastMonth: number }>()
+    const dataMap = new Map<string, { thisMonth: number; lastMonth: number }>();
 
     // Process confirmed transactions
     confirmedTxns.forEach((txn) => {
-      const date = new Date(txn.createdAt)
-      if (isNaN(date.getTime())) return // Skip invalid dates
-      const txnMonth = date.getMonth()
-      const txnYear = date.getFullYear()
-      const dayKey = date.toLocaleString("en-US", { month: "short", day: "2-digit" }) // e.g., "Jun 01"
-      const amount = Number.parseFloat(txn.convertedAmount) || 0
+      const date = new Date(txn.createdAt);
+      if (isNaN(date.getTime())) return; // Skip invalid dates
+      const txnMonth = date.getMonth();
+      const txnYear = date.getFullYear();
+      const dayKey = date.toLocaleString("en-US", { month: "short", day: "2-digit" }); // e.g., "Jun 01"
+      const amount = Number.parseFloat(txn.convertedAmount) || 0;
 
       if (txnYear === currentYear && txnMonth === currentMonth) {
         // This month
-        const existing = dataMap.get(dayKey) || { thisMonth: 0, lastMonth: 0 }
-        dataMap.set(dayKey, { thisMonth: existing.thisMonth + amount, lastMonth: existing.lastMonth })
+        const existing = dataMap.get(dayKey) || { thisMonth: 0, lastMonth: 0 };
+        dataMap.set(dayKey, { thisMonth: existing.thisMonth + amount, lastMonth: existing.lastMonth });
       } else if (txnYear === prevMonthYear && txnMonth === prevMonth) {
         // Last month
-        const existing = dataMap.get(dayKey) || { thisMonth: 0, lastMonth: 0 }
-        dataMap.set(dayKey, { thisMonth: existing.thisMonth, lastMonth: existing.lastMonth + amount })
+        const existing = dataMap.get(dayKey) || { thisMonth: 0, lastMonth: 0 };
+        dataMap.set(dayKey, { thisMonth: existing.thisMonth, lastMonth: existing.lastMonth + amount });
       }
-    })
+    });
 
     // Process paid invoices
     paidInvoices.forEach((inv) => {
-      const date = new Date(inv.createdAt)
-      if (isNaN(date.getTime())) return // Skip invalid dates
-      const invMonth = date.getMonth()
-      const invYear = date.getFullYear()
-      const dayKey = date.toLocaleString("en-US", { month: "short", day: "2-digit" }) // e.g., "Jun 01"
-      const amount = Number.parseFloat(inv.convertedAmount || "0") || 0
+      const date = new Date(inv.createdAt);
+      if (isNaN(date.getTime())) return; // Skip invalid dates
+      const invMonth = date.getMonth();
+      const invYear = date.getFullYear();
+      const dayKey = date.toLocaleString("en-US", { month: "short", day: "2-digit" }); // e.g., "Jun 01"
+      const amount = Number.parseFloat(inv.convertedAmount || "0") || 0;
 
       if (invYear === currentYear && invMonth === currentMonth) {
         // This month
-        const existing = dataMap.get(dayKey) || { thisMonth: 0, lastMonth: 0 }
-        dataMap.set(dayKey, { thisMonth: existing.thisMonth + amount, lastMonth: existing.lastMonth })
+        const existing = dataMap.get(dayKey) || { thisMonth: 0, lastMonth: 0 };
+        dataMap.set(dayKey, { thisMonth: existing.thisMonth + amount, lastMonth: existing.lastMonth });
       } else if (invYear === prevMonthYear && invMonth === prevMonth) {
         // Last month
-        const existing = dataMap.get(dayKey) || { thisMonth: 0, lastMonth: 0 }
-        dataMap.set(dayKey, { thisMonth: existing.thisMonth, lastMonth: existing.lastMonth + amount })
+        const existing = dataMap.get(dayKey) || { thisMonth: 0, lastMonth: 0 };
+        dataMap.set(dayKey, { thisMonth: existing.thisMonth, lastMonth: existing.lastMonth + amount });
       }
-    })
+    });
 
     // Convert to array and sort by date
     const chartData = Array.from(dataMap.entries())
@@ -125,25 +125,25 @@ const SalesChart: React.FC = () => {
         thisMonth: value.thisMonth,
         lastMonth: value.lastMonth,
       }))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     // Apply filter (7, 14, or 30 days)
-    const days = Number.parseInt(filter.split(" ")[0])
-    const cutoffDate = new Date()
-    cutoffDate.setDate(now.getDate() - days)
-    return chartData.filter((d) => new Date(d.date).getTime() >= cutoffDate.getTime())
-  }
+    const days = Number.parseInt(filter.split(" ")[0]);
+    const cutoffDate = new Date();
+    cutoffDate.setDate(now.getDate() - days);
+    return chartData.filter((d) => new Date(d.date).getTime() >= cutoffDate.getTime());
+  };
 
-  const data = isLoadingOrgId || isLoadingTxns || isLoadingInvoices ? [] : getChartData()
+  const data = isLoadingOrgId || isLoadingTxns || isLoadingInvoices ? [] : getChartData();
 
   const CustomTooltip = ({
     active,
     payload,
     label,
   }: {
-    active?: boolean
-    payload?: any[]
-    label?: string
+    active?: boolean;
+    payload?: any[];
+    label?: string;
   }) => {
     if (active && payload && payload.length) {
       return (
@@ -158,12 +158,12 @@ const SalesChart: React.FC = () => {
             </p>
           ))}
         </div>
-      )
+      );
     }
-    return null
-  }
+    return null;
+  };
 
-  const formatYAxis = (value: number): string => `R${value}`
+  const formatYAxis = (value: number): string => `R${value}`;
 
   return (
     <Card className="w-full bg-gradient-to-br from-[#171F2E] to-[#071D49] border-0 shadow-lg">
@@ -201,8 +201,8 @@ const SalesChart: React.FC = () => {
               </div>
             </div>
           ) : data.length === 0 ? (
-            <div className="absolute inset-0 flex items-center justify-center p-8">
-              <div className="text-center max-w-md">
+            <div className="absolute inset-0 flex items-center justify-center p-6">
+              <div className="bg-gray-800/30 backdrop-blur-md border border-gray-600/50 rounded-xl shadow-lg p-8 text-center max-w-md w-full">
                 <div className="relative mb-6">
                   <div className="w-24 h-24 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                     <BarChart3 className="text-emerald-400" size={40} />
@@ -214,8 +214,7 @@ const SalesChart: React.FC = () => {
 
                 <h4 className="text-2xl font-bold text-white mb-3">Ready to track your first sale?</h4>
                 <p className="text-gray-300 mb-6 leading-relaxed">
-                  Your sales dashboard is waiting for data. Create your first invoice to start tracking revenue and
-                  growth.
+                  Your sales dashboard is waiting for data. Create your first invoice to start tracking revenue and growth.
                 </p>
 
                 <div className="space-y-3">
@@ -277,7 +276,7 @@ const SalesChart: React.FC = () => {
         </div>
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
-export default SalesChart
+export default SalesChart;

@@ -97,7 +97,7 @@ export default function DashboardPage() {
         <Card className="bg-gradient-to-tr from-sapphire to-dark-turquoise p-3 sm:p-4">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs sm:text-sm font-medium text-white">
-              Total Sales
+              Total Crypto Assets
             </CardTitle>
             <CreditCard className="h-4 w-4 text-light-blue-gradient" />
           </CardHeader>
@@ -153,42 +153,6 @@ export default function DashboardPage() {
       {/* Recent Sales Table */}
       <RecentTransactions />
 
-
-      {/* <Card className="border border-midnight-express">
-        <CardHeader>
-          <CardTitle className="text-sm font-medium text-white">
-            Recent Sales
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {recentSales.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs sm:text-sm text-left">
-                <thead className="bg-white text-sapphire">
-                  <tr>
-                    <th className="py-2 px-2 sm:px-4">Product</th>
-                    <th className="py-2 px-2 sm:px-4">Customer</th>
-                    <th className="py-2 px-2 sm:px-4">Price</th>
-                    <th className="py-2 px-2 sm:px-4">Payment</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentSales.map((sale, index) => (
-                    <tr key={index} className="border-t">
-                      <td className="py-2 px-2 sm:px-4">{sale.product}</td>
-                      <td className="py-2 px-2 sm:px-4">{sale.customer}</td>
-                      <td className="py-2 px-2 sm:px-4">R{sale.price}</td>
-                      <td className="py-2 px-2 sm:px-4 text-dark-turquoise">{sale.payment}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="text-white text-center py-4">No recent transactions</p>
-          )}
-        </CardContent>
-      </Card> */}
     </div>
   );
 }
