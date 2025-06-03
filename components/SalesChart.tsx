@@ -170,8 +170,8 @@ const SalesChart: React.FC = () => {
       <CardContent className="p-6">
         <div className="flex flex-row items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-500/20 rounded-lg">
-              <TrendingUp className="text-emerald-400" size={20} />
+            <div className="p-2 bg-[#435ee5]/20 rounded-lg">
+              <TrendingUp className="text-[#435ee5]" size={20} />
             </div>
             <h3 className="text-xl font-bold text-white">Sales Overview</h3>
           </div>
@@ -196,7 +196,7 @@ const SalesChart: React.FC = () => {
           {isLoadingOrgId || isLoadingTxns || isLoadingInvoices ? (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#435ee5] mx-auto mb-4"></div>
                 <p className="text-white text-lg font-medium">Loading sales data...</p>
               </div>
             </div>
@@ -204,15 +204,15 @@ const SalesChart: React.FC = () => {
             <div className="absolute inset-0 flex items-center justify-center p-6">
               <div className="bg-gray-800/30 backdrop-blur-md border border-gray-600/50 rounded-xl shadow-lg p-8 text-center max-w-md w-full">
                 <div className="relative mb-6">
-                  <div className="w-24 h-24 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <BarChart3 className="text-emerald-400" size={40} />
+                  <div className="w-24 h-24 bg-gradient-to-br from-[#171F2E] to-[#435ee5] rounded-full flex items-center justify-center mx-auto mb-4">
+                    <BarChart3 className="text-[#435ee5]" size={40} />
                   </div>
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center">
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#435ee5] rounded-full flex items-center justify-center">
                     <Plus className="text-white" size={16} />
                   </div>
                 </div>
 
-                <h4 className="text-2xl font-bold text-white mb-3">Ready to track your first sale?</h4>
+                <h4 className="text-2xl font-bold text-white">Ready to track your first sale?</h4>
                 <p className="text-gray-300 mb-6 leading-relaxed">
                   Your sales dashboard is waiting for data. Create your first invoice to start tracking revenue and growth.
                 </p>
@@ -220,7 +220,7 @@ const SalesChart: React.FC = () => {
                 <div className="space-y-3">
                   <Button
                     asChild
-                    className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                    className="bg-gradient-to-r from-[#171F2E] to-[#435ee5] hover:from-[#171F2E]/90 hover:to-[#435ee5]/90 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
                   >
                     <Link href="/dashboard/invoices/new" className="flex items-center gap-2">
                       <Plus size={18} />
