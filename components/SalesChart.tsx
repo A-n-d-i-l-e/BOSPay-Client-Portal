@@ -172,7 +172,7 @@ const SalesChart: React.FC = () => {
       <CardContent className="p-6">
         <div className="flex flex-row items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-[#435ee5]/20 rounded-lg">
+            <div className="p-2 bg-[#a45ee5]/20 rounded-lg">
               <TrendingUp className="text-[#a45ee5]" size={20} />
             </div>
             <h3 className="text-xl font-bold text-white">Sales Overview</h3>
@@ -218,20 +218,6 @@ const SalesChart: React.FC = () => {
                 <p className="text-gray-300 mb-6 leading-relaxed">
                   Your sales dashboard is waiting for data. Start making sales in-app to start tracking revenue and growth.
                 </p>
-
-                {/* <div className="space-y-3">
-                  <Button
-                    asChild
-                    className="bg-[#05C3DE] hover:bg-[#05C3DE]/90 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
-                  >
-                    <Link href="/dashboard/invoices/new" className="flex items-center gap-2">
-                      <Plus size={18} />
-                      Create Your First Invoice
-                    </Link>
-                  </Button>
-
-                  <p className="text-sm text-gray-400">Or wait for confirmed transactions to appear here</p>
-                </div> */}
               </div>
             </div>
           ) : (
