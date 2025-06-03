@@ -209,13 +209,13 @@ const SalesChart: React.FC = () => {
                   <div className="w-24 h-24 bg-[#435ee5] rounded-full flex items-center justify-center mx-auto mb-4">
                     <BarChart3 className="text-white" size={40} />
                   </div>
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#435ee5] rounded-full flex items-center justify-center ring-2 ring-[#435ee5]/50">
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#05C3DE] rounded-full flex items-center justify-center ring-2 ring-[#435ee5]/50">
                     <Plus className="text-white" size={16} />
                   </div>
                 </div>
 
                 <h4 className="text-2xl font-bold text-white mb-3">Ready to track your first sale?</h4>
-                <p className="text-[#435ee5] mb-6 leading-relaxed">
+                <p className="text-white mb-6 leading-relaxed">
                   Your sales dashboard is waiting for data. Create your first invoice to start tracking revenue and growth.
                 </p>
 
