@@ -173,7 +173,7 @@ const SalesChart: React.FC = () => {
         <div className="flex flex-row items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-[#435ee5]/20 rounded-lg">
-              <TrendingUp className="text-[#435ee5]" size={20} />
+              <TrendingUp className="text-[#a45ee5]" size={20} />
             </div>
             <h3 className="text-xl font-bold text-white">Sales Overview</h3>
           </div>
