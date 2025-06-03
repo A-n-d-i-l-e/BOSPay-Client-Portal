@@ -11,6 +11,7 @@ import ProductPieChart from "@/components/ProductPieChart";
 import BestProduct from "@/components/BestProduct";
 import StockAlert from "@/components/StockAlert";
 import { LoadingSpinner } from "@/components/ui/loader";
+import RecentTransactions from "@/components/RecentTransactions";
 
 interface Sale {
   product: string;
@@ -150,7 +151,10 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent Sales Table */}
-      <Card className="border border-midnight-express">
+      <RecentTransactions />
+
+
+      {/* <Card className="border border-midnight-express">
         <CardHeader>
           <CardTitle className="text-sm font-medium text-white">
             Recent Sales
@@ -184,7 +188,7 @@ export default function DashboardPage() {
             <p className="text-white text-center py-4">No recent transactions</p>
           )}
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 }
