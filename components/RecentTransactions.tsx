@@ -1,90 +1,30 @@
-
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@clerk/nextjs";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bitcoin, Plus, CheckCircle2, Clock, XCircle, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { fetchConfirmedTransactions, type ConfirmedTransaction } from "@/data/transactions";
+import { fetchInvoiceRecords, type InvoiceRecord } from "@/data/invoiceRecords";
+import { fetchUserOrganizationId } from "@/data/org";
 import { Badge } from "@/components/ui/badge";
 
 // Define CombinedTransaction type
-type CombinedTransaction = {
-  invoiceId: string;
-  createdAt: string;
-  tokenSymbol?: string; // For ConfirmedTransaction
-  currency?: string; // For InvoiceRecord
-  convertedAmount: string;
-  statusReadable?: string; // For ConfirmedTransaction
-  status?: string; // For InvoiceRecord
-  type: "confirmed" | "invoice";
-  transactionHash?: string; // For ConfirmedTransaction
-  tokenAmount?: string; // For ConfirmedTransaction
-  amount?: string; // For InvoiceRecord
-};
+type CombinedTransaction = (ConfirmedTransaction | InvoiceRecord) & { type: "confirmed" | "invoice" };
 
 // Type guards
-function isConfirmedTransaction(txn: CombinedTransaction): txn is CombinedTransaction & { type: "confirmed" } {
+function isConfirmedTransaction(txn: CombinedTransaction): txn is ConfirmedTransaction & { type: "confirmed" } {
   return txn.type === "confirmed";
 }
 
-function isInvoiceRecord(txn: CombinedTransaction): txn is CombinedTransaction & { type: "invoice" } {
+function isInvoiceRecord(txn: CombinedTransaction): txn is InvoiceRecord & { type: "invoice" } {
   return txn.type === "invoice";
 }
 
-// Dummy data
-const dummyTransactions: CombinedTransaction[] = [
-  {
-    invoiceId: "tx_001",
-    createdAt: "2025-06-03T10:00:00Z",
-    tokenSymbol: "BTC",
-    convertedAmount: "121.00",
-    statusReadable: "Confirmed",
-    type: "confirmed",
-    transactionHash: "0x1234567890abcdef",
-    tokenAmount: "0.002",
-  },
-  {
-    invoiceId: "inv_001",
-    createdAt: "2025-06-02T15:30:00Z",
-    currency: "USDT",
-    convertedAmount: "590.00",
-    status: "Paid",
-    type: "invoice",
-    amount: "590.00",
-  },
-  {
-    invoiceId: "tx_002",
-    createdAt: "2025-06-01T09:45:00Z",
-    tokenSymbol: "ETH",
-    convertedAmount: "300.00",
-    statusReadable: "Confirmed",
-    type: "confirmed",
-    transactionHash: "0xabcdef1234567890",
-    tokenAmount: "0.1",
-  },
-  {
-    invoiceId: "inv_002",
-    createdAt: "2025-05-31T12:00:00Z",
-    currency: "DAI",
-    convertedAmount: "200.00",
-    status: "Paid",
-    type: "invoice",
-    amount: "200.00",
-  },
-  {
-    invoiceId: "tx_003",
-    createdAt: "2025-05-30T18:20:00Z",
-    tokenSymbol: "USDC",
-    convertedAmount: "450.00",
-    statusReadable: "Confirmed",
-    type: "confirmed",
-    transactionHash: "0x7890abcdef123456",
-    tokenAmount: "450",
-  },
-];
-
-// StatusBadge component
+// StatusBadge component (from CryptoTransactionHistoryPage)
 function StatusBadge({ status }: { status: string }) {
   const getStatusConfig = (status: string) => {
     const lowerStatus = status.toLowerCase();
@@ -109,8 +49,58 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 const RecentTransactions: React.FC = () => {
-  // Use dummy data (already sorted by createdAt)
-  const transactions = dummyTransactions;
+  const { getToken } = useAuth();
+
+  // Fetch organization ID
+  const { data: orgId, isLoading: isLoadingOrgId } = useQuery<string | null>({
+    queryKey: ["userOrgId"],
+    queryFn: async () => {
+      const token = await getToken();
+      if (!token) throw new Error("Authentication token not available");
+      return fetchUserOrganizationId(token);
+    },
+    staleTime: 1000 * 60 * 60, // 1 hour
+  });
+
+  // Fetch confirmed transactions
+  const { data: confirmedTransactions = [], isLoading: isLoadingTxns } = useQuery<ConfirmedTransaction[]>({
+    queryKey: ["confirmedTransactions", "recent"],
+    queryFn: async () => {
+      const token = await getToken();
+      if (!token) throw new Error("Authentication token not available");
+      return fetchConfirmedTransactions(token);
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Fetch invoice records
+  const { data: invoiceRecords = [], isLoading: isLoadingInvoices } = useQuery<InvoiceRecord[]>({
+    queryKey: ["invoiceRecords", orgId, "recent"],
+    queryFn: async () => {
+      if (!orgId) return [];
+      const token = await getToken();
+      if (!token) throw new Error("Authentication token not available");
+      return fetchInvoiceRecords(token, orgId);
+    },
+    enabled: !!orgId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Combine and select top 5 transactions
+  const transactions = useMemo<CombinedTransaction[]>(() => {
+    const confirmed = confirmedTransactions
+      .filter((txn) => txn.statusReadable.toLowerCase() === "confirmed")
+      .map((txn) => ({ ...txn, type: "confirmed" as const }));
+    const invoices = invoiceRecords
+      .filter((inv) => inv.status.toLowerCase() === "paid")
+      .map((inv) => ({ ...inv, type: "invoice" as const }));
+
+    return [...confirmed, ...invoices]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5);
+  }, [confirmedTransactions, invoiceRecords]);
+
+  const isLoading = isLoadingOrgId || isLoadingTxns || isLoadingInvoices;
 
   return (
     <Card className="bg-gradient-to-br from-[#171F2E] to-[#071D49] text-white border-0 shadow-lg h-full">
@@ -118,7 +108,14 @@ const RecentTransactions: React.FC = () => {
         <CardTitle className="text-lg sm:text-xl font-bold">Recent Sales</CardTitle>
       </CardHeader>
       <CardContent>
-        {transactions.length > 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
+              <p className="text-white text-lg font-medium">Loading transactions...</p>
+            </div>
+          </div>
+        ) : transactions.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-xs sm:text-sm text-left">
               <thead className="bg-[#1A2333] text-white">
@@ -126,27 +123,30 @@ const RecentTransactions: React.FC = () => {
                   <th className="py-2 px-2 sm:px-4">Payment</th>
                   <th className="py-2 px-2 sm:px-4">Amount</th>
                   <th className="py-2 px-2 sm:px-4">Status</th>
-                  <th className="py-2 px-2 sm:px-4">Date</th>
+                  <th className="py-2 px-2 sm:px-4">Date & Time</th>
                 </tr>
               </thead>
               <tbody>
                 {transactions.map((txn, index) => {
-                  const currency = isConfirmedTransaction(txn) ? txn.tokenSymbol : txn.currency ?? "Unknown";
-                  const amount = `R${Number.parseFloat(txn.convertedAmount).toFixed(2)}`;
-                  const status = isConfirmedTransaction(txn) ? txn.statusReadable : txn.status;
-                  const date = new Date(txn.createdAt).toLocaleDateString("en-US", {
+                  const currency = isConfirmedTransaction(txn) ? txn.tokenSymbol : (isInvoiceRecord(txn) ? txn.currency : "Unknown");
+                  const amount = txn.convertedAmount ? `R${Number.parseFloat(txn.convertedAmount).toFixed(2)}` : "N/A";
+                  const status = isConfirmedTransaction(txn) ? txn.statusReadable : (isInvoiceRecord(txn) ? txn.status : "Unknown");
+                  const dateTime = new Date(txn.createdAt).toLocaleString("en-US", {
                     month: "short",
                     day: "2-digit",
                     year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true,
                   });
                   return (
                     <tr key={index} className="border-t border-gray-700">
                       <td className="py-2 px-2 sm:px-4 text-emerald-400">{currency}</td>
                       <td className="py-2 px-2 sm:px-4">{amount}</td>
                       <td className="py-2 px-2 sm:px-4">
-                        <StatusBadge status={status!} />
+                        <StatusBadge status={status} />
                       </td>
-                      <td className="py-2 px-2 sm:px-4">{date}</td>
+                      <td className="py-2 px-2 sm:px-4">{dateTime}</td>
                     </tr>
                   );
                 })}
