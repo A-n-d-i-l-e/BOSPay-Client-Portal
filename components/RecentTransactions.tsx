@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bitcoin, Plus, CheckCircle2, Clock, XCircle, AlertCircle } from "lucide-react";
+import { Bitcoin, Plus, CheckCircle2, Clock, XCircle, AlertCircle, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { fetchConfirmedTransactions, type ConfirmedTransaction } from "@/data/transactions";
 import { fetchInvoiceRecords, type InvoiceRecord } from "@/data/invoiceRecords";
@@ -105,7 +105,12 @@ const RecentTransactions: React.FC = () => {
   return (
     <Card className="bg-gradient-to-br from-[#171F2E] to-[#071D49] text-white border-0 shadow-lg h-full">
       <CardHeader>
-        <CardTitle className="text-lg sm:text-xl font-bold">Recent Sales</CardTitle>
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-[#a45ee5]/20 rounded-lg">
+            <TrendingUp className="text-[#a45ee5]" size={20} />
+          </div>
+          <CardTitle className="text-lg sm:text-xl font-bold">Recent Sales</CardTitle>
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
