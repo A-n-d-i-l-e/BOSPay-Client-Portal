@@ -69,17 +69,14 @@ const BestProduct: React.FC = () => {
   return (
     <Card className="flex flex-col bg-gradient-to-br from-[#171F2E] to-[#071D49] text-white h-full">
       <CardHeader className="items-center pb-2 sm:pb-4 text-center sm:text-left">
-      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <div className="p-2 bg-[#a45ee5]/20 rounded-lg">
             <ShoppingBasket className="text-[#a45ee5]" size={20} />
           </div>
           <CardTitle className="text-base sm:text-lg lg:text-xl font-bold">Best Performing Products</CardTitle>
         </div>
-        {/* <CardTitle className="text-base sm:text-lg lg:text-xl font-bold">
-          Best Performing Products
-        </CardTitle> */}
         <CardDescription className="text-xs sm:text-sm text-[#05C3DE]">
-          January - June 2024
+          January - June 2025
         </CardDescription>
       </CardHeader>
 
@@ -87,8 +84,7 @@ const BestProduct: React.FC = () => {
         {isLoading ? (
           <div className="flex items-center justify-center h-full min-h-[200px] sm:min-h-[250px]">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
-              <p className="text-white text-lg font-medium">Loading best products...</p>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#05C3DE] mx-auto mb-4"></div>
             </div>
           </div>
         ) : error ? (
@@ -98,10 +94,10 @@ const BestProduct: React.FC = () => {
         ) : products.length === 0 ? (
           <div className="text-center max-w-md mx-auto py-8">
             <div className="relative mb-6">
-              <div className="w-24 h-24 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Star className="text-emerald-400" size={40} />
+              <div className="w-24 h-24 bg-[#05C3DE] rounded-full flex items-center justify-center mx-auto mb-4">
+                <Star className="text-white" size={40} />
               </div>
-              <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center">
+              <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#05C3DE] rounded-full flex items-center justify-center ring-2 ring-[#05C3DE]/50">
                 <Plus className="text-white" size={16} />
               </div>
             </div>
@@ -110,20 +106,6 @@ const BestProduct: React.FC = () => {
             <p className="text-gray-300 mb-6 leading-relaxed">
               Your product dashboard is waiting for data. Add your first product to start tracking performance.
             </p>
-
-            <div className="space-y-3">
-              <Button
-                asChild
-                className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
-              >
-                <Link href="/dashboard/products/new" className="flex items-center gap-2">
-                  <Plus size={18} />
-                  Add Your First Product
-                </Link>
-              </Button>
-
-              <p className="text-sm text-gray-400">Or wait for products to appear here</p>
-            </div>
           </div>
         ) : (
           <ChartContainer
