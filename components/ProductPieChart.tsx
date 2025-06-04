@@ -128,7 +128,7 @@ const ProductPieChart: React.FC = () => {
           <div className="flex items-center justify-center h-full min-h-[200px] sm:min-h-[250px]">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
-              <p className="text-white text-lg font-medium">Loading product data...</p>
+              {/* <p className="text-white text-lg font-medium">Loading product data...</p> */}
             </div>
           </div>
         ) : error ? (
@@ -138,10 +138,10 @@ const ProductPieChart: React.FC = () => {
         ) : products.length === 0 ? (
           <div className="text-center max-w-md mx-auto py-8">
             <div className="relative mb-6">
-              <div className="w-24 h-24 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-24 h-24 bg-[#05C3DE] rounded-full flex items-center justify-center mx-auto mb-4">
                 <PieChart2 className="text-emerald-400" size={40} />
               </div>
-              <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center">
+              <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#05C3DE] rounded-full flex items-center justify-center ring-2 ring-[#05C3DE]/50">
                 <Plus className="text-white" size={16} />
               </div>
             </div>
