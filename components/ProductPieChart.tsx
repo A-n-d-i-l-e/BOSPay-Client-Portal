@@ -139,7 +139,7 @@ const ProductPieChart: React.FC = () => {
           <div className="text-center max-w-md mx-auto py-8">
             <div className="relative mb-6">
               <div className="w-24 h-24 bg-[#05C3DE] rounded-full flex items-center justify-center mx-auto mb-4">
-                <PieChart2 className="text-emerald-400" size={40} />
+                <PieChart2 className="text-white" size={40} />
               </div>
               <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#05C3DE] rounded-full flex items-center justify-center ring-2 ring-[#05C3DE]/50">
                 <Plus className="text-white" size={16} />
