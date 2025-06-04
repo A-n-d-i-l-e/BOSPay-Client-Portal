@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -54,13 +55,12 @@ const StockAlert: React.FC = () => {
     <TooltipProvider>
       <Card className="flex flex-col bg-gradient-to-br from-[#171F2E] to-[#071D49] text-white">
         <CardHeader>
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-[#a45ee5]/20 rounded-lg">
-            <HandCoins className="text-[#a45ee5]" size={20} />
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-[#a45ee5]/20 rounded-lg">
+              <HandCoins className="text-[#a45ee5]" size={20} />
+            </div>
+            <CardTitle className="text-xl font-bold mb-4">Stock Alert</CardTitle>
           </div>
-          <CardTitle className="text-xl font-bold mb-4">Stock Alert</CardTitle>
-        </div>
-          {/* <h3 className="text-xl font-bold mb-4">Stock Alert</h3> */}
           <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
             <Input
               placeholder="Search products..."
@@ -109,8 +109,7 @@ const StockAlert: React.FC = () => {
         <CardContent>
           {isLoading ? (
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
-              {/* <p className="text-white text-lg font-medium">Loading stock data...</p> */}
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#05C3DE] mx-auto mb-4"></div>
             </div>
           ) : error ? (
             <div className="text-center text-red-500 py-4">
@@ -119,10 +118,10 @@ const StockAlert: React.FC = () => {
           ) : products.length === 0 ? (
             <div className="text-center max-w-md mx-auto py-8">
               <div className="relative mb-6">
-                <div className="w-24 h-24 bg-gradient-to-br from-[#05C3DE]-500/20 to-teal-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Package className="text-emerald-400" size={40} />
+                <div className="w-24 h-24 bg-[#05C3DE] rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Package className="text-white" size={40} />
                 </div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center">
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#05C3DE] rounded-full flex items-center justify-center ring-2 ring-[#05C3DE]/50">
                   <Plus className="text-white" size={16} />
                 </div>
               </div>
@@ -131,20 +130,6 @@ const StockAlert: React.FC = () => {
               <p className="text-gray-300 mb-6 leading-relaxed">
                 Your stock dashboard is waiting for products. Add your first product to start tracking inventory.
               </p>
-
-              <div className="space-y-3">
-                <Button
-                  asChild
-                  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
-                >
-                  <Link href="/dashboard/products/new" className="flex items-center gap-2">
-                    <Plus size={18} />
-                    Add Your First Product
-                  </Link>
-                </Button>
-
-                <p className="text-sm text-gray-400">Or wait for products to appear here</p>
-              </div>
             </div>
           ) : filteredAndSortedProducts.length > 0 ? (
             <div className="space-y-4">
