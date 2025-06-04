@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { TrendingUp, PieChart as PieChart2, Plus, HandCoins } from "lucide-react";
+import { TrendingUp, PieChart as PieChart2, Plus, HandCoins, ShoppingBasket } from "lucide-react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Sector } from "recharts";
 import {
   Card,
@@ -113,7 +113,7 @@ const ProductPieChart: React.FC = () => {
       <CardHeader className="items-center pb-2 sm:pb-4 text-center sm:text-left">
       <div className="flex items-center gap-3">
           <div className="p-2 bg-[#a45ee5]/20 rounded-lg">
-            <HandCoins className="text-[#a45ee5]" size={20} />
+            <ShoppingBasket className="text-[#a45ee5]" size={20} />
           </div>
           <CardTitle className="text-lg sm:text-xl font-bold">Product Distribution</CardTitle>
         </div>
