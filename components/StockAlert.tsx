@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { fetchProducts, Product } from "@/data/products";
 import { useSession } from "@clerk/nextjs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, Search, RefreshCw, AlertTriangle, Package, Plus } from "lucide-react";
+import { ArrowUpDown, Search, RefreshCw, AlertTriangle, Package, Plus, HandCoins } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
@@ -54,7 +54,13 @@ const StockAlert: React.FC = () => {
     <TooltipProvider>
       <Card className="flex flex-col bg-gradient-to-br from-[#171F2E] to-[#071D49] text-white">
         <CardHeader>
-          <h3 className="text-xl font-bold mb-4">Stock Alert</h3>
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-[#a45ee5]/20 rounded-lg">
+            <HandCoins className="text-[#a45ee5]" size={20} />
+          </div>
+          <CardTitle className="text-xl font-bold mb-4">Stock Alert</CardTitle>
+        </div>
+          {/* <h3 className="text-xl font-bold mb-4">Stock Alert</h3> */}
           <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
             <Input
               placeholder="Search products..."
@@ -104,7 +110,7 @@ const StockAlert: React.FC = () => {
           {isLoading ? (
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
-              <p className="text-white text-lg font-medium">Loading stock data...</p>
+              {/* <p className="text-white text-lg font-medium">Loading stock data...</p> */}
             </div>
           ) : error ? (
             <div className="text-center text-red-500 py-4">
@@ -113,7 +119,7 @@ const StockAlert: React.FC = () => {
           ) : products.length === 0 ? (
             <div className="text-center max-w-md mx-auto py-8">
               <div className="relative mb-6">
-                <div className="w-24 h-24 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-24 h-24 bg-gradient-to-br from-[#05C3DE]-500/20 to-teal-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Package className="text-emerald-400" size={40} />
                 </div>
                 <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center">
