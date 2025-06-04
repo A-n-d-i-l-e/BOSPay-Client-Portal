@@ -154,7 +154,7 @@ const ProductPieChart: React.FC = () => {
             <div className="space-y-3">
               <Button
                 asChild
-                className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                className="bg-[#05C3DE] text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
               >
                 <Link href="/dashboard/products/new" className="flex items-center gap-2">
                   <Plus size={18} />
