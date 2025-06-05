@@ -19,6 +19,8 @@ import {
   ChevronRight,
   LogOut,
   Building,
+  BanknoteArrowDown,
+  Wallet,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -37,9 +39,9 @@ export function Sidebar({ className }: SidebarProps) {
     { label: "Products", icon: ShoppingCart, href: "/dashboard/products" },
     { label: "Transactions", icon: ArrowLeftRight, href: "/dashboard/transactions" },
     { label: "Categories", icon: Boxes, href: "/dashboard/category" },
-    { label: "Withdrawals", icon: User, href: "/dashboard/withdraw" },
+    { label: "Withdrawals", icon: BanknoteArrowDown, href: "/dashboard/withdraw" },
     { label: "Manage Staff", icon: User, href: "/dashboard/staffmembers" },
-    { label: "Wallets", icon: User, href: "/dashboard/wallets" },
+    { label: "Wallets", icon: Wallet, href: "/dashboard/wallets" },
     { label: "Settings", icon: Settings, href: "/dashboard/settings" },
   ];
 
