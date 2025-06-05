@@ -174,19 +174,6 @@ const RecentTransactions: React.FC = () => {
               Your sales dashboard is waiting for data. Create your first invoice to start tracking transactions.
             </p>
 
-            {/* <div className="space-y-3">
-              <Button
-                asChild
-                className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
-              >
-                <Link href="/dashboard/invoices/new" className="flex items-center gap-2">
-                  <Plus size={18} />
-                  Create Your First Invoice
-                </Link>
-              </Button>
-
-              <p className="text-sm text-gray-400">Or wait for transactions to appear here</p>
-            </div> */}
           </div>
         )}
       </CardContent>
